@@ -1,0 +1,26 @@
+# Secrets — these must NEVER be committed
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+secrets/
+
+# Dependencies
+node_modules/
+.pnpm-store/
+packages/contracts/lib/
+
+# Foundry build output
+packages/contracts/out/
+packages/contracts/cache/
+packages/contracts/broadcast/
+
+# Editor and OS noise
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
