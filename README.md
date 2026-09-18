@@ -103,7 +103,7 @@ clutter.
 Requires [Foundry](https://book.getfoundry.sh/getting-started/installation).
 
 ```bash
-git clone https://github.com/YOUR-USERNAME/agentvault.git
+git clone https://github.com/markantpacheco/agentvault.git
 cd agentvault/packages/contracts
 forge install foundry-rs/forge-std
 forge build
