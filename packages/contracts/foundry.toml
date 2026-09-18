@@ -1,0 +1,27 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+test = "test"
+
+# Pinned compiler version. Pinning means everyone building this repo produces
+# identical bytecode. Unpinned versions cause "works on my machine" bugs.
+solc = "0.8.24"
+
+# PROTOTYPE SETTING, changeable later.
+# "paris" is the most conservative EVM target and avoids opcodes that some
+# L2s support inconsistently. Robinhood Chain runs Arbitrum Nitro and likely
+# supports newer targets, but that is UNVERIFIED. Verify before changing.
+# See docs/ASSUMPTIONS.md.
+evm_version = "paris"
+
+# Optimizer off during development gives faster builds and clearer stack
+# traces. Turn it on before any real deployment and re-run all tests.
+optimizer = false
+
+verbosity = 1
+
+[fmt]
+line_length = 100
+tab_width = 4
+bracket_spacing = false
