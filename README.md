@@ -102,18 +102,22 @@ clutter.
 
 Requires [Foundry](https://book.getfoundry.sh/getting-started/installation).
 
+Foundry dependencies are tracked as git submodules, so the clone needs them:
+
 ```bash
-git clone https://github.com/markantpacheco/agentvault.git
+git clone --recurse-submodules https://github.com/markantpacheco/agentvault.git
 cd agentvault/packages/contracts
-forge install foundry-rs/forge-std
 forge build
 forge test -vv
 ```
 
-Expected: **7 passed, 0 failed.**
+Already cloned without `--recurse-submodules`:
 
-`forge-std` is Foundry's standard test library. It is not committed to this
-repo, so `forge install` fetches it on first setup.
+```bash
+git submodule update --init --recursive
+```
+
+Expected: **7 passed, 0 failed.**
 
 ---
 

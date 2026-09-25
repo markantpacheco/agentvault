@@ -9,7 +9,6 @@ secrets/
 # Dependencies
 node_modules/
 .pnpm-store/
-packages/contracts/lib/
 
 # Foundry build output
 packages/contracts/out/
