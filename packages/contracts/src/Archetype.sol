@@ -18,10 +18,10 @@ pragma solidity 0.8.24;
 ///      reads as zero, so the zero value must always mean "not set".
 enum Archetype {
     Unassigned, // 0 — never a valid assigned archetype
-    Guardian,   // 1 — defensive, patient, capital-conscious
-    Navigator,  // 2 — analytical, adaptive, data-driven
-    Tactician,  // 3 — active, disciplined, execution-focused
-    Maverick    // 4 — experimental, volatility-focused
+    Guardian, // 1 — defensive, patient, capital-conscious
+    Navigator, // 2 — analytical, adaptive, data-driven
+    Tactician, // 3 — active, disciplined, execution-focused
+    Maverick // 4 — experimental, volatility-focused
 }
 
 /// @title ArchetypeLib
