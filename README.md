@@ -121,6 +121,23 @@ Expected: **84 passed, 0 failed.**
 
 ---
 
+## Deployed contracts
+
+**Robinhood Chain Testnet (chain ID 46630).** PROTOTYPE, unaudited, simulated
+capital only — balances have no redeemable value. Nothing is deployed to
+mainnet.
+
+| Contract | Address | Explorer |
+|---|---|---|
+| `GenesisAgent` | `0x0EBdDD089f8203DD5cD1Bd1f148F75757285CF96` | [View verified source](https://explorer.testnet.chain.robinhood.com/address/0x0EBdDD089f8203DD5cD1Bd1f148F75757285CF96) |
+| `AccountRegistry` | `0x0D0080582D317D2878A31b01D97614a3E918dC65` | [View verified source](https://explorer.testnet.chain.robinhood.com/address/0x0D0080582D317D2878A31b01D97614a3E918dC65) |
+
+Both verified on Blockscout — solc 0.8.24, `evm_version = paris`, optimizer
+off. Deployed from commit `b8cdd38`. Full record in
+[`deployments/robinhood-testnet.json`](deployments/robinhood-testnet.json).
+
+---
+
 ## Engineering principles
 
 1. No real capital until legal review and an independent audit are complete.

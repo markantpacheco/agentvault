@@ -14,7 +14,7 @@ nowhere to hide.
 
 | ID | Integration | Status | Interface | Mock |
 |---|---|---|---|---|
-| I1 | Chain config (RPC, chain ID) | MOCK | `packages/config` | Anvil local |
+| I1 | Chain config (RPC, chain ID) | **VERIFIED** 2026-09-26 | chain ID 46630 measured; RPC live | Anvil still used for local tests |
 | I2 | ERC-4337 EntryPoint | MOCK | `IEntryPoint` | `MockEntryPoint` |
 | I3 | ERC-6551 registry | MOCK | `IERC6551Registry` | `MockRegistry` |
 | I4 | Bundler / paymaster | MOCK | `IBundlerClient` | local stub |
@@ -83,11 +83,20 @@ Deterministic checks required before any Volatile-tier position:
 
 ## Verified addresses
 
-Empty by design. Nothing is recorded here until its gate above is complete.
+No longer empty. Every entry below was measured or deployed, never copied from
+a blog or inferred.
 
 | ID | Network | Address | Verified by | Date |
 |---|---|---|---|---|
-| — | — | — | — | — |
+| I1 | Robinhood Chain testnet (46630) | n/a — chain config | `cast chain-id` returned 46630 against the testnet RPC | 2026-09-26 |
+| — | Robinhood Chain testnet (46630) | `0x0EBdDD089f8203DD5cD1Bd1f148F75757285CF96` — `GenesisAgent` | Deployed from commit `b8cdd38`; source verified on Blockscout | 2026-09-26 |
+| — | Robinhood Chain testnet (46630) | `0x0D0080582D317D2878A31b01D97614a3E918dC65` — `AccountRegistry` | Deployed from commit `b8cdd38`; source verified on Blockscout | 2026-09-26 |
+
+Full record, including transaction hashes and constructor arguments, in
+`deployments/robinhood-testnet.json`.
+
+**Mainnet (4663) has nothing deployed to it**, and `DeployTestnet.s.sol`
+refuses that chain id outright — asserted by a test.
 
 ---
 

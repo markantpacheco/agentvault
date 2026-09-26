@@ -23,7 +23,7 @@ its week ends.
 | 9 | Performance registry | Recording, deposit/profit separation, segmented views | |
 | 10 | Agent pipeline | Typed schemas, mock classifier, schema rejection tests | |
 | 11 | Frontend | Dashboard, mandate selection, kill switch, leaderboard | |
-| 12 | Testnet + hardening | Deploy, fuzz, invariants, public launch | |
+| 12 | Testnet + hardening | Deploy, fuzz, invariants, public launch | ◐ Deploy done early (2026-09-26); fuzz, invariants, launch outstanding |
 
 ---
 
@@ -65,6 +65,28 @@ regardless of the above.
 ## Prototype acceptance criteria
 
 The local prototype is done when all of these pass as automated tests.
+
+Every tick above is earned by an automated test. **No criterion is ticked on
+the strength of the testnet deployment**, because a single happy-path run
+cannot establish the negative half of any of them: the live run showed that the
+holder *can* set a mandate, not that a non-holder *cannot*; that one NFT maps
+to one account, not that two never collide; that an archetype reads back
+correctly, not that it is unchangeable.
+
+What the live deployment of 2026-09-26 did demonstrate, end to end on chain
+(`deployments/robinhood-testnet.json`):
+
+- Minting assigns the requested archetype, read back as `Guardian`
+- An account is created seeded at `SEED_BALANCE` with PnL exactly zero — the
+  seed recorded as principal, not as performance
+- The holder can select a mandate, and its PROTOTYPE parameters read back
+  correctly
+- The kill switch toggles
+- A withdrawal reduces `balance`, increases `withdrawnTotal`, and leaves PnL at
+  zero — principal out is not a loss
+
+That is a working system, not a proof of the invariants. The invariants are the
+tests' job.
 
 - [x] Minting assigns exactly one archetype; never changeable afterward
 - [x] Each NFT maps to exactly one account; no two NFTs share one

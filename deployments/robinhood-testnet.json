@@ -1,0 +1,113 @@
+{
+  "network": "Robinhood Chain Testnet",
+  "chainId": 46630,
+  "chainIdSource": "measured with `cast chain-id`, 2026-09-26 (closes ASSUMPTIONS U1)",
+  "rpcUrl": "https://rpc.testnet.chain.robinhood.com",
+  "explorer": "https://explorer.testnet.chain.robinhood.com",
+  "deployedAt": "2026-09-26",
+  "commit": "b8cdd38388260a54d28191fc110d855e03b68fc4",
+  "deployer": "0xeA68020Fa1EeE645E019C870cdE1f99e69135629",
+  "compiler": {
+    "solc": "0.8.24",
+    "evmVersion": "paris",
+    "optimizer": false
+  },
+  "contracts": {
+    "GenesisAgent": {
+      "address": "0x0EBdDD089f8203DD5cD1Bd1f148F75757285CF96",
+      "txHash": "0x30841828cdcfcedceea65ca7b9be9220f08f7177b3547200518f2dd656c98103",
+      "block": 124711421,
+      "gasPaidEth": "0.0000246258",
+      "constructorArgs": [
+        10000
+      ],
+      "constructorSignature": "constructor(uint256)",
+      "verified": true,
+      "explorerUrl": "https://explorer.testnet.chain.robinhood.com/address/0x0EBdDD089f8203DD5cD1Bd1f148F75757285CF96"
+    },
+    "AccountRegistry": {
+      "address": "0x0D0080582D317D2878A31b01D97614a3E918dC65",
+      "txHash": "0x72dbb1cfbe4a8fa46c5e3a39d7387a41fe5071df0325800b0dfd1521f8fc30a8",
+      "block": 124711440,
+      "gasPaidEth": "0.00001872134",
+      "constructorArgs": [
+        "0x0EBdDD089f8203DD5cD1Bd1f148F75757285CF96"
+      ],
+      "constructorSignature": "constructor(address)",
+      "verified": true,
+      "explorerUrl": "https://explorer.testnet.chain.robinhood.com/address/0x0D0080582D317D2878A31b01D97614a3E918dC65"
+    }
+  },
+  "notDeployed": {
+    "ArchetypeLib": "internal-only library, inlined by the compiler; no linking required",
+    "MandateLib": "internal-only library, inlined by the compiler; no linking required"
+  },
+  "totalGasPaidEth": "0.00004334714",
+  "smokeTest": {
+    "status": "passed",
+    "ranAt": "2026-09-26",
+    "script": "packages/contracts/script/SmokeTest.s.sol",
+    "assertionsPassed": 8,
+    "stateChangingTransactions": 5,
+    "totalGasUsed": 430025,
+    "totalGasPaidEth": "0.00000430025",
+    "verifiedIndependently": "end state read back from the deployed contracts with cast call, not taken from the script's own logs; all five receipts confirmed status=true",
+    "transactions": [
+      {
+        "step": 1,
+        "call": "mint(uint8)",
+        "txHash": "0x2435ed7c8c2bd3314093cc0ec6b047092fb76a3b99fc77e295a11dd1c845b56d",
+        "block": 124717937,
+        "gasUsed": 126291
+      },
+      {
+        "step": 3,
+        "call": "createAccount(uint256)",
+        "txHash": "0x5775c408eb55ce7f0e69eca261735dea86bbae20594bd2983647986540e0f515",
+        "block": 124717953,
+        "gasUsed": 149526
+      },
+      {
+        "step": 5,
+        "call": "setMandate(uint256,uint8)",
+        "txHash": "0xf50929c8c39ca9f0478fb9b493b9c67565ca53d41e61c2dda149b63b0faaa862",
+        "block": 124717972,
+        "gasUsed": 44303
+      },
+      {
+        "step": 7,
+        "call": "setAutomationPaused(uint256,bool)",
+        "txHash": "0xc3277ea5b2567f3b29ab4cf4e4b7b8654663bd19b4394e919619a6cac44381dd",
+        "block": 124718024,
+        "gasUsed": 43424
+      },
+      {
+        "step": 8,
+        "call": "withdraw(uint256,uint256)",
+        "txHash": "0x1c452913a347cb30a21ee002b9404cee4bb188554a2a0777720da5ce5da765af",
+        "block": 124718040,
+        "gasUsed": 66481
+      }
+    ],
+    "note": "Steps 2, 4 and 6 are reads and cost no gas, which is why eight steps produced five transactions.",
+    "endState": {
+      "tokenId": 1,
+      "owner": "0xeA68020Fa1EeE645E019C870cdE1f99e69135629",
+      "archetype": "Guardian",
+      "balance": "9999000000000000000000",
+      "depositedTotal": "10000000000000000000000",
+      "withdrawnTotal": "1000000000000000000",
+      "pnl": "0",
+      "netPrincipal": "9999000000000000000000",
+      "mandate": "Preservation",
+      "automationPaused": false,
+      "ownerPeriod": 1
+    },
+    "runnableOnce": "GenesisAgent allows one mint per address ever, so re-running this script from the same deployer reverts AlreadyMinted. That is the contract working."
+  },
+  "notes": [
+    "PROTOTYPE deployment. Not audited. Simulated capital only; balances have no redeemable value.",
+    "Neither contract has an owner, admin, or role-gated function.",
+    "Nothing is deployed to Robinhood Chain mainnet (4663), and the deploy script refuses it."
+  ]
+}
