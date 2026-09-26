@@ -149,8 +149,12 @@ access control, the failure path, and the relevant invariant from
 Milestones 1–4 complete, 5 partially: toolchain, repo, `Archetype.sol`,
 `GenesisAgent.sol` (ERC-721 with a permanent archetype assigned at mint),
 `AccountRegistry.sol` (one isolated simulated-capital account per NFT),
-`Mandate.sol` (holder-selected risk setting), 84 passing tests, docs published,
-pushed to a private GitHub remote. Nothing deployed to any chain.
+`Mandate.sol` (holder-selected risk setting), 86 passing tests, docs published,
+pushed to a private GitHub remote.
+
+**Deployed to Robinhood Chain testnet (46630)**, both contracts verified on
+Blockscout, live smoke test passed. Nothing on mainnet, and the deploy script
+refuses chain id 4663. Addresses in `deployments/robinhood-testnet.json`.
 
 Neither contract has an owner, admin, or role-gated function — there is no
 privileged actor anywhere. `AccountRegistry` depends on `IERC721`, never on
