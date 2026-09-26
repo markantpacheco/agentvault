@@ -310,3 +310,42 @@ to anything that read it before somebody happened to interact — and the risk
 engine sizing a position off those limits would be working from an appetite the
 current holder never chose. Recorded as a convention in `CLAUDE.md` because it
 applies to every future view, not just these four.
+
+---
+
+## D12 — Two mandate parameters are specified but not enforced (2026-09-26)
+
+**Decided:** `RiskEngine` enforces `maxPositionBps` and `maxSlippageBps`. It
+does **not** enforce `maxOpenPositions` or `maxDailyDrawdownBps`, which remain
+in `MandateParams` and in the PROTOTYPE table, carrying `TODO(positions)` and
+`TODO(drawdown)` comments at the site where each check would go.
+
+**Why they cannot be enforced yet:**
+
+- **`maxOpenPositions`** needs open-position tracking. Nothing records what an
+  account currently holds — `AccountRegistry` stores a balance, not positions.
+  Enforcing the cap would mean inventing that state here, in a `view` function
+  that writes nothing, which is impossible by design.
+- **`maxDailyDrawdownBps`** needs PnL history with daily boundaries. The
+  registry derives PnL from a point-in-time balance and has no history and no
+  concept of a day. Enforcing it would require the same invented state.
+
+Both belong with execution and settlement, which is where positions and
+realised PnL will first exist.
+
+**Why leave them visible rather than delete them:** they are real parts of the
+mandate design and will be enforced. Removing them would lose the design;
+silently not enforcing them would be worse than either. **A parameter that
+looks enforced and is not is more dangerous than one openly marked pending** —
+the first invites someone to rely on it.
+
+**What this means concretely today:** a mandate's position cap and slippage cap
+bind. Its open-position count and daily drawdown limit do **not**. Nobody
+should describe an account as drawdown-limited, in code, docs, or UI, until
+this entry is superseded. That is also why `RiskEngine` states the
+`MAX_DATA_AGE` self-reporting limitation in a comment rather than letting a
+freshness check imply an oracle guarantee it does not have.
+
+**Reverses if:** execution and settlement land, giving positions and realised
+PnL somewhere real to live. Drawdown enforcement should be written alongside
+them, not before.

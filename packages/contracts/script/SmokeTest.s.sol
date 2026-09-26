@@ -41,8 +41,14 @@ contract SmokeTest is Script {
         vm.startBroadcast();
 
         // ---- 1. mint ----
+        // Assert the id is the next one in sequence rather than literally 1.
+        // On a fresh deployment that IS 1, which is what the spec describes,
+        // but the script stays meaningful against a deployment that has
+        // already minted — where the next id is 2, not a failure.
+        uint256 expectedId = nft.totalMinted() + 1;
         uint256 tokenId = nft.mint(Archetype.Guardian);
-        require(tokenId == 1, "step 1: expected token id 1");
+        require(tokenId == expectedId, "step 1: token id was not the next in sequence");
+        require(nft.totalMinted() == expectedId, "step 1: totalMinted did not advance");
         console.log("1. mint                  -> tokenId", tokenId);
 
         // ---- 2. archetypeOf ----
@@ -67,6 +73,32 @@ contract SmokeTest is Script {
         console.log("4. getAccount            -> balance", a.balance);
         console.log("   depositedTotal        ->", a.depositedTotal);
         console.log("   pnl                   -> 0, paused: true, mandate: Unset");
+
+        // ---- 4b. deposit (addition beyond the spec's eight steps) ----
+        // The literal demonstration that deposit() leaves pnlOf unchanged. The
+        // first run established this only adjacently: the seed appeared as
+        // depositedTotal with PnL zero, and a withdrawal left PnL at zero, but
+        // the deposit() entry point itself was never exercised on chain.
+        int256 pnlBeforeDeposit = registry.pnlOf(tokenId);
+        uint256 balanceBeforeDeposit = registry.getAccount(tokenId).balance;
+        uint256 depositAmount = 2500e18;
+
+        registry.deposit(tokenId, depositAmount);
+
+        AccountRegistry.Account memory afterDeposit = registry.getAccount(tokenId);
+        require(
+            afterDeposit.balance == balanceBeforeDeposit + depositAmount,
+            "step 4b: balance did not increase by the deposit"
+        );
+        require(
+            afterDeposit.depositedTotal == seed + depositAmount,
+            "step 4b: depositedTotal did not increase by the deposit"
+        );
+        require(registry.pnlOf(tokenId) == pnlBeforeDeposit, "step 4b: deposit moved PnL");
+        require(registry.pnlOf(tokenId) == 0, "step 4b: PnL should still be exactly zero");
+        console.log("4b. deposit              -> balance", afterDeposit.balance);
+        console.log("    depositedTotal       ->", afterDeposit.depositedTotal);
+        console.log("    pnl after deposit    -> 0 (funding is not profit)");
 
         // ---- 5. setMandate ----
         registry.setMandate(tokenId, Mandate.Preservation);

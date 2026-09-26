@@ -18,7 +18,7 @@ its week ends.
 | 4 | Account registry | One isolated account per NFT, isolation tests | ✅ Done |
 | 5 | Mandate + strategy registries | Selection, cooling-off, compatibility | ◐ Selection done; cooling-off and strategy registry deferred (D11) |
 | 6 | Permission module | Session keys: scope, expiry, revocation, transfer invalidation | |
-| 7 | Risk engine | Deterministic checks, position sizing, drawdown | |
+| 7 | Risk engine | Deterministic checks, position sizing, drawdown | ◐ Checks and position sizing done; drawdown deferred (D12) |
 | 8 | Fill simulator + screener | AMM impact pricing, token safety checks | |
 | 9 | Performance registry | Recording, deposit/profit separation, segmented views | |
 | 10 | Agent pipeline | Typed schemas, mock classifier, schema rejection tests | |
@@ -98,7 +98,7 @@ tests' job.
 - [ ] Risk engine rejects: oversized position, excess slippage, incompatible
       strategy, stale oracle, insufficient liquidity
 - [ ] Daily drawdown breach pauses new trades
-- [ ] Kill switch blocks new trades, never blocks withdrawal
+- [x] Kill switch blocks new trades, never blocks withdrawal
 - [ ] Transfer revokes owner and agent permissions and pauses automation
 - [x] Transfer does not change the archetype
 - [ ] New owner starts in conservative Starter Mode

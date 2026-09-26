@@ -117,6 +117,14 @@ U1). Do not do one without the other.
 - **OpenZeppelin v5.2.0+ will not compile under `evm_version = "paris"`.**
   It uses `mcopy`, a Cancun opcode, reached through `Strings.sol` →
   `Bytes.sol`. v5.1.0 is the newest paris-compatible release.
+- **Assigning a memory struct creates a REFERENCE, not a copy.**
+  `TradeProposal memory b = a;` makes `b` point at the same memory as `a`, so
+  `b.field = x` also changes `a.field`. Silent — no warning, no revert — and it
+  survives tests whenever the assertion does not happen to depend on the
+  aliased field. It nearly shipped a wrong number into the demo video: the
+  "unchanged" proposal printed the oversized size, while the verdict stayed
+  correct so nothing failed. Copy field by field when you need an independent
+  struct.
 - **`vm.prank` applies to exactly one call, and a view read consumes it.**
   A `registry.getAccount(...)` placed between the prank and the call you
   meant to prank spends the prank, so the real call arrives from the test
@@ -149,8 +157,9 @@ access control, the failure path, and the relevant invariant from
 Milestones 1–4 complete, 5 partially: toolchain, repo, `Archetype.sol`,
 `GenesisAgent.sol` (ERC-721 with a permanent archetype assigned at mint),
 `AccountRegistry.sol` (one isolated simulated-capital account per NFT),
-`Mandate.sol` (holder-selected risk setting), 86 passing tests, docs published,
-pushed to a private GitHub remote.
+`Mandate.sol` (holder-selected risk setting), `RiskEngine.sol` (the
+deterministic validator), 116 passing tests, docs published, pushed to a
+private GitHub remote.
 
 **Deployed to Robinhood Chain testnet (46630)**, both contracts verified on
 Blockscout, live smoke test passed. Nothing on mainnet, and the deploy script
@@ -167,6 +176,18 @@ registry are deferred (`DECISIONS.md` D11). A transfer resets the mandate to
 `Unset` — Starter Mode — and no view exposes raw storage, so a pending
 transfer never leaks the previous holder's settings.
 
-Next: finish Milestone 5 or move to Milestone 6, the permission module.
-ERC-6551 is still `MOCK` (`INTEGRATIONS.md` I3), so accounts remain structs
-until that gate clears.
+`RiskEngine` is a pure `view` validator: no storage, no admin, no pause, and
+an asset allowlist fixed at construction with no setter. It returns a
+`RejectReason` rather than reverting, so a rejection says which rule stopped
+it. `approved` is derived from `reason` at a single exit point, so the two
+cannot disagree. It depends on `IAccountRegistry` and so structurally cannot
+read an archetype.
+
+Two mandate parameters are specified but NOT enforced — `maxOpenPositions` and
+`maxDailyDrawdownBps` (`DECISIONS.md` D12). Do not describe an account as
+drawdown-limited until that changes.
+
+Next: Milestone 6, the permission module — session keys with scope, expiry,
+revocation, transfer invalidation, plus the `TODO(milestone-6)` settlement
+authorisation. ERC-6551 is still `MOCK` (`INTEGRATIONS.md` I3), so accounts
+remain structs until that gate clears.
