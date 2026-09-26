@@ -15,6 +15,9 @@ packages/contracts/out/
 packages/contracts/cache/
 packages/contracts/broadcast/
 
+# Claude Code personal settings (permissions etc.) — not shared
+.claude/settings.local.json
+
 # Editor and OS noise
 .vscode/
 .idea/
