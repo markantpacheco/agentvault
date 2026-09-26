@@ -17,8 +17,8 @@ chain directly.
 | # | Fact | Source | Checked |
 |---|---|---|---|
 | V1 | Robinhood Chain mainnet live since 2026-07-01 | Robinhood support pages | 2026-08-19 |
-| V2 | Mainnet chain ID 4663 | Robinhood support article | 2026-08-19 |
-| V3 | Testnet chain ID 46630 | Official chain docs + Alchemy | 2026-08-19 |
+| V2 | Mainnet chain ID 4663 | Measured: `cast chain-id` against mainnet RPC (also Robinhood support article) | 2026-09-26 |
+| V3 | Testnet chain ID 46630 | **Measured: `cast chain-id` against testnet RPC** (closes U1; also official docs + Alchemy) | 2026-09-26 |
 | V4 | Arbitrum Orbit / Nitro L2, settles to Ethereum, ETH for gas | Official docs | 2026-08-19 |
 | V5 | Fully EVM-compatible; Foundry, Hardhat, ethers, viem, Wagmi work unmodified | Official docs | 2026-08-19 |
 | V6 | Contract deployment is permissionless | Official docs | 2026-08-19 |
@@ -82,7 +82,6 @@ Each gets a typed interface and a mock until confirmed. See `INTEGRATIONS.md`.
 
 | # | Assumption | How to verify |
 |---|---|---|
-| U1 | Testnet chain ID is 46630 | Query `eth_chainId`. One source said 46646 — trust neither until measured. |
 | U2 | Canonical ERC-4337 EntryPoint address and version | Query chain; check bytecode. **Never** take an EntryPoint address from a blog. |
 | U3 | ERC-6551 registry deployed at the usual deterministic address | Query chain |
 | U4 | Any oracle publishes prices on this chain, for which assets, at what cadence | Check Chainlink / Pyth / RedStone deployment pages, then query |
@@ -126,3 +125,4 @@ Assumptions that turned out to be wrong. Kept deliberately.
 | 2026-08-19 | Tokenized stocks are the natural asset class for this chain | RWA activity is thin; memecoins and stables dominate. Risk engine would reject most RWA trades on liquidity grounds — correctly. |
 | 2026-08-19 | "SEC approved tokenized stock trading" means the asset class opened up | Approvals were for regulated exchanges and DTC infrastructure. Tokenized securities remain securities. |
 | 2026-09-18 | The Innovation Exemption may never arrive (recorded 2026-08-19 after the Aug 14 meeting was cancelled) | It arrived 2026-09-17, two days after the Senate failed to advance the CLARITY Act. Lesson: "delayed indefinitely" is not "abandoned." Re-check regulatory assumptions monthly, not quarterly. |
+| 2026-09-26 | Testnet chain ID might be 46646 (one third-party source, recorded 2026-08-19 as U1) | Wrong. `cast chain-id` against `https://rpc.testnet.chain.robinhood.com` returned **46630**, matching the official chain docs. **There is no discrepancy with the official docs** — the third-party figure was simply incorrect. U1 closed and folded into V3. `.env.example` already had 46630 and needed no change. Lesson: a single unsourced third-party number is not enough to cast doubt on first-party docs; measure early and cheaply instead of carrying the doubt for five weeks. |
