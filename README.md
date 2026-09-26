@@ -131,10 +131,18 @@ mainnet.
 |---|---|---|
 | `GenesisAgent` | `0x0EBdDD089f8203DD5cD1Bd1f148F75757285CF96` | [View verified source](https://explorer.testnet.chain.robinhood.com/address/0x0EBdDD089f8203DD5cD1Bd1f148F75757285CF96) |
 | `AccountRegistry` | `0x0D0080582D317D2878A31b01D97614a3E918dC65` | [View verified source](https://explorer.testnet.chain.robinhood.com/address/0x0D0080582D317D2878A31b01D97614a3E918dC65) |
+| `RiskEngine` | `0x158A97c9b56043b5F3b841B3435D249326F43777` | [View verified source](https://explorer.testnet.chain.robinhood.com/address/0x158A97c9b56043b5F3b841B3435D249326F43777) |
+| `TestAsset` (AVTA) | `0x87CEd5dc138F825B3F42924A8Bb6E15ae5EC9A7d` | [View verified source](https://explorer.testnet.chain.robinhood.com/address/0x87CEd5dc138F825B3F42924A8Bb6E15ae5EC9A7d) |
+| `TestAsset` (AVTB) | `0x9D97ebc6A395aaf981B26d952A4e22604eAFEc75` | [View verified source](https://explorer.testnet.chain.robinhood.com/address/0x9D97ebc6A395aaf981B26d952A4e22604eAFEc75) |
 
-Both verified on Blockscout — solc 0.8.24, `evm_version = paris`, optimizer
-off. Deployed from commit `b8cdd38`. Full record in
+All verified on Blockscout — solc 0.8.24, `evm_version = paris`, optimizer off.
+Full record in
 [`deployments/robinhood-testnet.json`](deployments/robinhood-testnet.json).
+
+The two `TestAsset` tokens are **purpose-deployed placeholders** with no market,
+no price and no value. They exist so the risk engine has an asset allowlist that
+makes no claim about asset class — see
+[`docs/DECISIONS.md`](docs/DECISIONS.md) D13.
 
 ---
 

@@ -36,6 +36,74 @@
       "constructorSignature": "constructor(address)",
       "verified": true,
       "explorerUrl": "https://explorer.testnet.chain.robinhood.com/address/0x0D0080582D317D2878A31b01D97614a3E918dC65"
+    },
+    "TestAssetA": {
+      "address": "0x87CEd5dc138F825B3F42924A8Bb6E15ae5EC9A7d",
+      "txHash": "0x0e85aa740b555f02071ba663d85ae33d289a472e91c98f853a5672e9af49620f",
+      "block": 124753509,
+      "gasUsed": 1085627,
+      "gasPaidEth": "0.00001085627",
+      "constructorArgs": [
+        "AgentVault Test Asset A",
+        "AVTA"
+      ],
+      "constructorSignature": "constructor(string,string)",
+      "sourceCommit": "e82788dd2c4283540ba3f977346f8583c30442e8",
+      "verified": true,
+      "symbol": "AVTA",
+      "decimals": 18,
+      "totalSupply": "1000000000000000000000000",
+      "note": "Purpose-deployed placeholder. Not a real asset: no market, no price, no liquidity, no value. Source under src/mocks/ so status is unambiguous from the path.",
+      "explorerUrl": "https://explorer.testnet.chain.robinhood.com/address/0x87CEd5dc138F825B3F42924A8Bb6E15ae5EC9A7d"
+    },
+    "TestAssetB": {
+      "address": "0x9D97ebc6A395aaf981B26d952A4e22604eAFEc75",
+      "txHash": "0x096d7189440c9d40342a2fc69520b42183a5204a4b07d12cf5cc8cfe5b4fff48",
+      "block": 124753520,
+      "gasUsed": 1085627,
+      "gasPaidEth": "0.00001085627",
+      "constructorArgs": [
+        "AgentVault Test Asset B",
+        "AVTB"
+      ],
+      "constructorSignature": "constructor(string,string)",
+      "sourceCommit": "e82788dd2c4283540ba3f977346f8583c30442e8",
+      "verified": true,
+      "symbol": "AVTB",
+      "decimals": 18,
+      "totalSupply": "1000000000000000000000000",
+      "note": "Purpose-deployed placeholder. Not a real asset: no market, no price, no liquidity, no value. Source under src/mocks/ so status is unambiguous from the path.",
+      "explorerUrl": "https://explorer.testnet.chain.robinhood.com/address/0x9D97ebc6A395aaf981B26d952A4e22604eAFEc75",
+      "verificationNote": "forge reported 'already verified, skipping' because Blockscout matched AVTA's byte-identical source, but the explorer API still showed is_verified:false. Re-run with --skip-is-verified-check to verify properly."
+    },
+    "RiskEngine": {
+      "address": "0x158A97c9b56043b5F3b841B3435D249326F43777",
+      "txHash": "0x2ed949aed399cd75bda90083a1a2e86ed3d67caead4ee1bb6df5895da9740f3f",
+      "block": 124753535,
+      "gasUsed": 1118522,
+      "gasPaidEth": "0.00001118522",
+      "constructorArgs": [
+        "0x0D0080582D317D2878A31b01D97614a3E918dC65",
+        [
+          "0x87CEd5dc138F825B3F42924A8Bb6E15ae5EC9A7d",
+          "0x9D97ebc6A395aaf981B26d952A4e22604eAFEc75"
+        ]
+      ],
+      "constructorSignature": "constructor(address,address[])",
+      "sourceCommit": "b48efd4",
+      "sourceCommitNote": "src/RiskEngine.sol was unchanged between b48efd4 and deployment, verified with git diff, so that hash describes the deployed bytecode.",
+      "verified": true,
+      "allowlist": {
+        "assets": [
+          "AVTA 0x87CEd5dc138F825B3F42924A8Bb6E15ae5EC9A7d",
+          "AVTB 0x9D97ebc6A395aaf981B26d952A4e22604eAFEc75"
+        ],
+        "immutable": true,
+        "deliberatelyExcluded": "The five faucet-supplied tokenized equities (TSLA, AMD, AMZN, NFLX, PLTR). Verified and recorded as INTEGRATIONS I13 but not allowlisted. See DECISIONS D13.",
+        "verifiedOnChain": "isApprovedAsset(AVTA)=true, isApprovedAsset(AVTB)=true, isApprovedAsset(TSLA)=false"
+      },
+      "maxDataAge": 300,
+      "explorerUrl": "https://explorer.testnet.chain.robinhood.com/address/0x158A97c9b56043b5F3b841B3435D249326F43777"
     }
   },
   "notDeployed": {
@@ -109,5 +177,20 @@
     "PROTOTYPE deployment. Not audited. Simulated capital only; balances have no redeemable value.",
     "Neither contract has an owner, admin, or role-gated function.",
     "Nothing is deployed to Robinhood Chain mainnet (4663), and the deploy script refuses it."
-  ]
+  ],
+  "riskEngineDeployment": {
+    "deployedAt": "2026-09-26",
+    "totalGasUsed": 3289776,
+    "totalGasPaidEth": "0.00003289776",
+    "estimatedBeforehandEth": "0.000087251364362568",
+    "estimateNote": "Actual cost was ~38% of the estimate because the estimate used the 0.02 gwei max fee while the chain settled at the 0.01 gwei base fee.",
+    "predictedAddressesMatched": true
+  },
+  "liveDemo": {
+    "script": "packages/contracts/script/LiveDemo.s.sol",
+    "status": "dry run clean against the live deployment; broadcast pending",
+    "transactionsRequired": "at most 2 - an unpause only if automation is already paused, plus the beat-6 pause. Every other beat is a view and costs nothing.",
+    "dryRunGas": 59997,
+    "arc": "beat 4 APPROVED at 499 units, beat 5 REJECTED MaxPositionExceeded at 1999, beat 6 REJECTED AutomationPaused at the identical 499 units"
+  }
 }
