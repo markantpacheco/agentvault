@@ -3,6 +3,7 @@ pragma solidity 0.8.24;
 
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import {Mandate, MandateLib, MandateParams} from "./Mandate.sol";
 
 /// @title AccountRegistry
 /// @notice One isolated simulated-capital account per Genesis Agent NFT.
@@ -43,6 +44,7 @@ contract AccountRegistry {
         bool automationPaused;
         uint32 ownerPeriod; // increments on each detected transfer
         uint64 createdAt; // block.timestamp at creation
+        Mandate mandate; // holder-selected risk setting; Unset until chosen
     }
 
     /// @notice Thrown when the NFT contract address is zero.
@@ -68,6 +70,7 @@ contract AccountRegistry {
     event Withdrawn(uint256 indexed tokenId, address indexed owner, uint256 amount);
     event AutomationPausedSet(uint256 indexed tokenId, bool paused);
     event OwnerPeriodStarted(uint256 indexed tokenId, address indexed newOwner, uint32 ownerPeriod);
+    event MandateSelected(uint256 indexed tokenId, Mandate mandate, uint32 ownerPeriod);
 
     /// @notice Simulated units an account is seeded with at creation.
     /// @dev PROTOTYPE. Not audited, not final, and not a claim about anything.
@@ -123,6 +126,10 @@ contract AccountRegistry {
         // SafeCast rather than a raw cast: a silent truncation here would
         // write a wrong creation time that nothing would ever flag.
         account.createdAt = block.timestamp.toUint64();
+        // Written explicitly even though a fresh slot is already zero: the
+        // holder chooses their risk level deliberately, and the protocol
+        // never selects one on their behalf.
+        account.mandate = Mandate.Unset;
 
         _accountCount += 1;
 
@@ -177,6 +184,25 @@ contract AccountRegistry {
         emit AutomationPausedSet(tokenId, paused);
     }
 
+    /// @notice Select the account's risk mandate.
+    /// @dev Current holder only. `Unset` is rejected, so there is no way to
+    ///      un-choose a mandate except by transferring the NFT.
+    ///
+    ///      The protocol never assigns a mandate, never defaults one, and
+    ///      never infers one from the token's archetype. This contract cannot
+    ///      read an archetype at all — it depends only on `IERC721`.
+    function setMandate(uint256 tokenId, Mandate newMandate) external {
+        Account storage account = _requireOwnerAndSync(tokenId);
+        MandateLib.requireValid(newMandate);
+
+        account.mandate = newMandate;
+
+        // ownerPeriod is included so an indexer can attribute the choice to
+        // the holder who made it, which matters once performance history is
+        // segmented by owner period.
+        emit MandateSelected(tokenId, newMandate, account.ownerPeriod);
+    }
+
     // TODO(milestone-6): trade settlement attaches here. Nothing in this
     // milestone can change `balance` other than the holder's own deposits and
     // withdrawals, because there is no authorised caller that could settle a
@@ -189,10 +215,12 @@ contract AccountRegistry {
     // Views
     // -----------------------------------------------------------------------
 
-    /// @notice Full account state.
+    /// @notice Full account state, as it will be after the next sync.
+    /// @dev Routed through `_effectiveAccount`, so a pending transfer is
+    ///      reflected here rather than leaking the previous holder's settings.
     function getAccount(uint256 tokenId) external view returns (Account memory) {
         _requireAccount(tokenId);
-        return _accounts[tokenId];
+        return _effectiveAccount(tokenId);
     }
 
     /// @notice Whether an account has been created for a token.
@@ -214,11 +242,7 @@ contract AccountRegistry {
     ///      unsynced case reads as paused, and the raw `automationPaused`
     ///      field is never exposed on its own.
     function isAutomationPaused(uint256 tokenId) public view returns (bool) {
-        Account storage account = _accounts[tokenId];
-        if (account.automationPaused) {
-            return true;
-        }
-        return account.lastKnownOwner != agentNft.ownerOf(tokenId);
+        return _effectiveAccount(tokenId).automationPaused;
     }
 
     /// @notice Principal currently in the account: deposits minus withdrawals.
@@ -251,6 +275,23 @@ contract AccountRegistry {
     function isTransferPending(uint256 tokenId) external view returns (bool) {
         _requireAccount(tokenId);
         return _accounts[tokenId].lastKnownOwner != agentNft.ownerOf(tokenId);
+    }
+
+    /// @notice The account's selected risk mandate, or `Unset` if none.
+    function mandateOf(uint256 tokenId) external view returns (Mandate) {
+        _requireAccount(tokenId);
+        return _effectiveAccount(tokenId).mandate;
+    }
+
+    /// @notice Risk limits for the account's selected mandate.
+    /// @dev Reverts `InvalidMandate(0)` when no mandate has been chosen.
+    ///      Returning a zeroed struct would read as limits of zero rather than
+    ///      as a decision nobody has made.
+    function mandateParamsOf(uint256 tokenId) external view returns (MandateParams memory) {
+        _requireAccount(tokenId);
+        // A pending transfer yields `Unset`, so this reverts InvalidMandate(0)
+        // rather than handing out the previous holder's limits.
+        return MandateLib.paramsOf(_effectiveAccount(tokenId).mandate);
     }
 
     /// @notice Number of accounts created.
@@ -291,10 +332,47 @@ contract AccountRegistry {
             account.ownerPeriod += 1;
             account.lastKnownOwner = currentOwner;
 
+            // Starter Mode: the new holder inherits a paused account with no
+            // risk setting and must choose one deliberately. Reset to `Unset`
+            // rather than to `Preservation` — defaulting somebody into a risk
+            // level they never picked is exactly what separating collectible
+            // identity from financial risk exists to prevent.
+            account.mandate = Mandate.Unset;
+
             emit OwnerPeriodStarted(tokenId, currentOwner, account.ownerPeriod);
         }
 
         return account;
+    }
+
+    /// @dev The stored account with pending-transfer transformations applied
+    ///      IN MEMORY ONLY. Never writes storage — it is `view`, so it cannot.
+    ///
+    ///      Transfer detection is lazy: there is no hook from the NFT contract
+    ///      into this registry, so between a transfer and the new holder's
+    ///      first interaction the stored account still describes the previous
+    ///      holder's setup. Reading raw storage in that window hands out a
+    ///      stale answer — the seller's pause state and the seller's risk
+    ///      mandate — and anything sizing a position off those limits would be
+    ///      working from an appetite the current holder never chose.
+    ///
+    ///      Applying the same transformations `_requireOwnerAndSync` will
+    ///      write means every view reports the state the account is already
+    ///      committed to, so a caller cannot observe a difference that depends
+    ///      only on whether somebody has interacted yet. Every view exposing
+    ///      account state must go through here.
+    ///
+    ///      Deliberately NOT gated on `account.exists`: for a token that has
+    ///      no account, `lastKnownOwner` is the zero address and so differs
+    ///      from the live owner, which makes `isAutomationPaused` return true.
+    ///      That is the fail-safe answer for an account that cannot run
+    ///      anything at all.
+    function _effectiveAccount(uint256 tokenId) internal view returns (Account memory account) {
+        account = _accounts[tokenId];
+        if (account.lastKnownOwner != agentNft.ownerOf(tokenId)) {
+            account.automationPaused = true;
+            account.mandate = Mandate.Unset;
+        }
     }
 
     /// @dev Reverts unless an account exists for `tokenId`.

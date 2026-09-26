@@ -5,7 +5,7 @@ re-explaining the project. Keep it short. Update it at the end of every
 work session.
 
 **Last updated:** 2026-09-26
-**Current milestone:** 1-4 complete, 5 not started
+**Current milestone:** 1-4 complete, 5 partial
 **Builder:** solo, novice developer, macOS
 **Constraint:** limited token budget — batch requests, keep state in files
 
@@ -34,10 +34,10 @@ See `PRODUCT.md` for detail, `DECISIONS.md` for why.
 |---|---|
 | Toolchain | Installed (git, node, pnpm, foundry 1.8.3, gh, VS Code) |
 | Repo | `~/Documents/agentvault`, pushed to `markantpacheco/agentvault` |
-| Contracts | `Archetype.sol`, `GenesisAgent.sol`, `AccountRegistry.sol` + 59 passing tests |
+| Contracts | `Archetype.sol`, `GenesisAgent.sol`, `AccountRegistry.sol`, `Mandate.sol` + 84 passing tests |
 | Dependencies | `forge-std` v1.16.2, OpenZeppelin v5.1.0 — submodules, pinned |
 | GitHub | Connected. Remote is **private**. |
-| Docs | This set, plus `specs/GenesisAgent.md` and `specs/AccountRegistry.md` |
+| Docs | This set, plus specs for `GenesisAgent`, `AccountRegistry`, `Mandate` |
 | Deployed anywhere | **No.** Local only. Nothing on any public chain. |
 
 ---

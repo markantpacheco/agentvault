@@ -262,3 +262,51 @@ or a curated onboarding — none chosen.
 
 **Reverses if:** the mint stops being free, or the prototype is exposed to an
 audience where a padded record would mislead someone.
+
+---
+
+## D11 — Mandate ships without cooling-off or a strategy registry (2026-09-26)
+
+**Decided:** Milestone 5 ships mandate *selection* only. Three pieces named in
+the roadmap deliverable are deferred:
+
+1. **Cooling-off on raising risk.** Lowering a mandate's risk should take
+   effect immediately; raising it should wait. `MandateLib.riskRank` exists and
+   is tested precisely so that comparison is available when the rule is
+   written, but no delay is enforced today.
+2. **Strategy registry.**
+3. **Mandate–strategy compatibility checking.**
+
+**Why:**
+- Cooling-off is a scheduling choice, not an oversight. It appears nowhere in
+  the demo, and time-based tests — warping, boundary conditions either side of
+  the delay, interaction with the transfer reset — cost hours this sprint does
+  not have. Writing it badly is worse than not writing it: a cooling-off period
+  that can be bypassed is a false guarantee, and rule 6 forbids implying a
+  safety the system does not have.
+- No strategies exist. A registry of nothing is ceremony. When strategies
+  arrive, compatibility checking belongs in the risk engine, which is where the
+  deterministic decision already lives, not in a registry beside it.
+
+**Cost:** A holder can raise risk instantly today. In a simulation with no live
+execution path that costs nothing real, but it must be closed before any
+configuration with live capital — and the live-capital gate in `ROADMAP.md`
+already blocks that independently.
+
+**What this is NOT:** the absence of cooling-off is not a claim that raising
+risk is safe, and `Speculative.liveEligible == false` is not a claim that live
+execution exists. Nothing in this system has a live-execution path.
+
+**Reverses if:** the risk engine lands (Milestone 7) — cooling-off should be
+written alongside it, since that is where risk changes are already validated.
+
+**Also decided here: views never expose raw account state.** Transfer
+detection is lazy, so between a transfer and the new holder's first interaction
+stored state still describes the previous holder. `getAccount`, `mandateOf`,
+`mandateParamsOf` and `isAutomationPaused` all route through
+`_effectiveAccount`, which applies the pending-transfer transformations in
+memory. Without it, `mandateParamsOf` would hand out the seller's risk limits
+to anything that read it before somebody happened to interact — and the risk
+engine sizing a position off those limits would be working from an appetite the
+current holder never chose. Recorded as a convention in `CLAUDE.md` because it
+applies to every future view, not just these four.

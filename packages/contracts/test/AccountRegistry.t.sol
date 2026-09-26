@@ -5,6 +5,7 @@ import {Test} from "forge-std/Test.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {AccountRegistry} from "../src/AccountRegistry.sol";
+import {Mandate, MandateLib, MandateParams} from "../src/Mandate.sol";
 
 /// @title MockAgentNft
 /// @notice Minimal IERC721 standing in for the Genesis Agent NFT.
@@ -103,6 +104,7 @@ contract AccountRegistryTest is Test {
     event AccountCreated(uint256 indexed tokenId, address indexed owner, uint256 seedBalance);
     event AutomationPausedSet(uint256 indexed tokenId, bool paused);
     event OwnerPeriodStarted(uint256 indexed tokenId, address indexed newOwner, uint32 ownerPeriod);
+    event MandateSelected(uint256 indexed tokenId, Mandate mandate, uint32 ownerPeriod);
 
     function setUp() public {
         nft = new MockAgentNft();
@@ -128,6 +130,7 @@ contract AccountRegistryTest is Test {
         assertEq(got.automationPaused, want.automationPaused, "automationPaused changed");
         assertEq(uint256(got.ownerPeriod), uint256(want.ownerPeriod), "ownerPeriod changed");
         assertEq(uint256(got.createdAt), uint256(want.createdAt), "createdAt changed");
+        assertEq(uint8(got.mandate), uint8(want.mandate), "mandate changed");
     }
 
     // ---------------------------------------------------------------- creation
@@ -442,8 +445,9 @@ contract AccountRegistryTest is Test {
 
         nft.transfer(TOKEN_A, carol);
 
-        // Stored flag is still false; the read must not be.
-        assertFalse(registry.getAccount(TOKEN_A).automationPaused, "raw flag should be stale");
+        // Every view reports effective state, so getAccount agrees rather than
+        // handing back the stale raw flag it used to expose.
+        assertTrue(registry.getAccount(TOKEN_A).automationPaused, "getAccount leaked raw flag");
         assertTrue(registry.isAutomationPaused(TOKEN_A), "unsynced transfer read as running");
     }
 
@@ -707,5 +711,312 @@ contract AccountRegistryTest is Test {
         registry.isTransferPending(TOKEN_A);
 
         assertFalse(registry.accountExists(TOKEN_A), "accountExists should be false");
+    }
+
+    // ------------------------------------------------------------ mandate
+
+    /// WHAT: A new account has no mandate selected.
+    /// WHY: The holder chooses their risk level deliberately. The protocol
+    ///      must never pick one for them, not even the most conservative.
+    /// FAILURE MEANS: Somebody is defaulted into a risk level they never
+    ///      chose. Invariant 6 — the reason mandate and archetype are separate.
+    function test_NewAccountStartsWithMandateUnset() public {
+        _createFor(alice, TOKEN_A);
+        assertEq(uint8(registry.mandateOf(TOKEN_A)), uint8(Mandate.Unset), "mandate pre-set");
+    }
+
+    /// WHAT: The holder can select each of the four mandates.
+    /// WHY: All four must be reachable, independent of anything else about the
+    ///      token — in particular independent of its archetype.
+    /// FAILURE MEANS: Some risk level is unreachable for some holders.
+    function test_HolderCanSetEachMandate() public {
+        _createFor(alice, TOKEN_A);
+
+        vm.prank(alice);
+        registry.setMandate(TOKEN_A, Mandate.Preservation);
+        assertEq(uint8(registry.mandateOf(TOKEN_A)), uint8(Mandate.Preservation), "Preservation");
+
+        vm.prank(alice);
+        registry.setMandate(TOKEN_A, Mandate.Balanced);
+        assertEq(uint8(registry.mandateOf(TOKEN_A)), uint8(Mandate.Balanced), "Balanced");
+
+        vm.prank(alice);
+        registry.setMandate(TOKEN_A, Mandate.Tactical);
+        assertEq(uint8(registry.mandateOf(TOKEN_A)), uint8(Mandate.Tactical), "Tactical");
+
+        vm.prank(alice);
+        registry.setMandate(TOKEN_A, Mandate.Speculative);
+        assertEq(uint8(registry.mandateOf(TOKEN_A)), uint8(Mandate.Speculative), "Speculative");
+    }
+
+    /// WHAT: setMandate emits MandateSelected carrying the owner period.
+    /// WHY: Performance history is segmented by owner period, so a mandate
+    ///      choice must be attributable to the holder who made it.
+    /// FAILURE MEANS: A previous holder's risk choice gets attributed to the
+    ///      current one, or vice versa.
+    function test_SetMandateEmitsMandateSelectedWithOwnerPeriod() public {
+        _createFor(alice, TOKEN_A);
+
+        vm.expectEmit(true, false, false, true, address(registry));
+        emit MandateSelected(TOKEN_A, Mandate.Tactical, 1);
+        vm.prank(alice);
+        registry.setMandate(TOKEN_A, Mandate.Tactical);
+    }
+
+    /// WHAT: Selecting Unset reverts.
+    /// WHY: `Unset` means "no decision made". Allowing it as a selection would
+    ///      make a deliberate choice indistinguishable from an absent one.
+    /// FAILURE MEANS: Accounts can hold a mandate that reads as unchosen.
+    ///      Invariant 1.
+    function test_SetMandateRejectsUnset() public {
+        _createFor(alice, TOKEN_A);
+
+        vm.prank(alice);
+        vm.expectRevert(abi.encodeWithSelector(MandateLib.InvalidMandate.selector, uint8(0)));
+        registry.setMandate(TOKEN_A, Mandate.Unset);
+    }
+
+    /// WHAT: A non-holder cannot set a mandate.
+    /// WHY: The risk setting is the holder's alone.
+    /// FAILURE MEANS: A stranger sets the risk level on your account.
+    ///      Invariant 4.
+    function test_NonHolderCannotSetMandate() public {
+        _createFor(alice, TOKEN_A);
+
+        vm.prank(carol);
+        vm.expectRevert(
+            abi.encodeWithSelector(AccountRegistry.NotTokenOwner.selector, TOKEN_A, carol)
+        );
+        registry.setMandate(TOKEN_A, Mandate.Balanced);
+    }
+
+    /// WHAT: The previous holder cannot set a mandate after transfer.
+    /// WHY: The owner is read live, so selling the NFT surrenders the risk
+    ///      setting along with everything else.
+    /// FAILURE MEANS: A seller keeps control of the buyer's risk level.
+    function test_PreviousHolderCannotSetMandateAfterTransfer() public {
+        _createFor(alice, TOKEN_A);
+        vm.prank(alice);
+        registry.setMandate(TOKEN_A, Mandate.Tactical);
+
+        nft.transfer(TOKEN_A, carol);
+
+        vm.prank(alice);
+        vm.expectRevert(
+            abi.encodeWithSelector(AccountRegistry.NotTokenOwner.selector, TOKEN_A, alice)
+        );
+        registry.setMandate(TOKEN_A, Mandate.Speculative);
+    }
+
+    /// WHAT: A detected transfer resets the mandate to Unset.
+    /// WHY: Starter Mode. A new holder must not inherit a risk level chosen by
+    ///      somebody else. Resetting to Unset rather than Preservation is
+    ///      deliberate — defaulting someone into any risk level they did not
+    ///      pick is the thing this separation exists to prevent.
+    /// FAILURE MEANS: A buyer inherits the seller's risk appetite. Invariant 5.
+    function test_TransferResetsMandateToUnset() public {
+        _createFor(alice, TOKEN_A);
+        vm.prank(alice);
+        registry.setMandate(TOKEN_A, Mandate.Speculative);
+        assertEq(uint8(registry.mandateOf(TOKEN_A)), uint8(Mandate.Speculative), "precondition");
+
+        nft.transfer(TOKEN_A, carol);
+
+        // The reset is applied on the new holder's first interaction, the same
+        // lazy path that pauses automation and opens the new owner period.
+        vm.prank(carol);
+        registry.setAutomationPaused(TOKEN_A, true);
+
+        assertEq(uint8(registry.mandateOf(TOKEN_A)), uint8(Mandate.Unset), "mandate survived");
+    }
+
+    /// WHAT: After transfer the new holder selects their own mandate, and the
+    ///       event carries the new owner period.
+    /// WHY: The new holder's choice must be recorded against their period, not
+    ///      the previous holder's.
+    /// FAILURE MEANS: Risk choices are misattributed across owner periods.
+    function test_NewHolderSelectsOwnMandateWithNewOwnerPeriod() public {
+        _createFor(alice, TOKEN_A);
+        vm.prank(alice);
+        registry.setMandate(TOKEN_A, Mandate.Speculative);
+
+        nft.transfer(TOKEN_A, carol);
+
+        // First interaction by the new holder: the sync and the selection
+        // happen in the same call, and the event must show period 2.
+        vm.expectEmit(true, false, false, true, address(registry));
+        emit MandateSelected(TOKEN_A, Mandate.Preservation, 2);
+        vm.prank(carol);
+        registry.setMandate(TOKEN_A, Mandate.Preservation);
+
+        assertEq(uint8(registry.mandateOf(TOKEN_A)), uint8(Mandate.Preservation), "not set");
+        assertEq(uint256(registry.getAccount(TOKEN_A).ownerPeriod), 2, "period wrong");
+    }
+
+    /// WHAT: mandateParamsOf returns the table values for the selection.
+    /// WHY: These are the limits the risk engine will validate against.
+    /// FAILURE MEANS: An account is governed by limits other than the ones its
+    ///      holder chose.
+    function test_MandateParamsOfMatchesSelection() public {
+        _createFor(alice, TOKEN_A);
+        vm.prank(alice);
+        registry.setMandate(TOKEN_A, Mandate.Balanced);
+
+        MandateParams memory p = registry.mandateParamsOf(TOKEN_A);
+        assertEq(p.maxPositionBps, 2000, "maxPositionBps");
+        assertEq(p.maxSlippageBps, 100, "maxSlippageBps");
+        assertEq(p.maxDailyDrawdownBps, 500, "maxDailyDrawdownBps");
+        assertEq(p.maxOpenPositions, 8, "maxOpenPositions");
+        assertTrue(p.liveEligible, "Balanced should be live-eligible");
+    }
+
+    /// WHAT: mandateParamsOf reverts when no mandate has been chosen.
+    /// WHY: A zeroed struct would read as limits of zero — a real, extremely
+    ///      restrictive setting — rather than as an unmade decision.
+    /// FAILURE MEANS: Callers cannot distinguish "no mandate" from "zero
+    ///      limits".
+    function test_MandateParamsOfRevertsWhenUnset() public {
+        _createFor(alice, TOKEN_A);
+
+        vm.expectRevert(abi.encodeWithSelector(MandateLib.InvalidMandate.selector, uint8(0)));
+        registry.mandateParamsOf(TOKEN_A);
+    }
+
+    /// WHAT: Mandate views revert for an account that was never created.
+    /// WHY: Consistent with every other view — zeroed state must not pass for
+    ///      real state.
+    /// FAILURE MEANS: A nonexistent account appears to exist with no mandate.
+    function test_MandateViewsRevertForMissingAccount() public {
+        bytes memory expected =
+            abi.encodeWithSelector(AccountRegistry.AccountDoesNotExist.selector, TOKEN_A);
+
+        vm.expectRevert(expected);
+        registry.mandateOf(TOKEN_A);
+        vm.expectRevert(expected);
+        registry.mandateParamsOf(TOKEN_A);
+    }
+
+    /// WHAT: Setting a mandate on A does not change B's mandate.
+    /// WHY: Risk settings are per account, like every other field.
+    /// FAILURE MEANS: One holder's risk choice changes another's account.
+    function test_SettingMandateOnADoesNotChangeB() public {
+        _createFor(alice, TOKEN_A);
+        _createFor(bob, TOKEN_B);
+        AccountRegistry.Account memory before = registry.getAccount(TOKEN_B);
+
+        vm.prank(alice);
+        registry.setMandate(TOKEN_A, Mandate.Speculative);
+
+        _assertSameAccount(registry.getAccount(TOKEN_B), before);
+        assertEq(uint8(registry.mandateOf(TOKEN_B)), uint8(Mandate.Unset), "B mandate changed");
+    }
+
+    /// WHAT: Changing the mandate leaves balance, principal totals and PnL
+    ///       untouched.
+    /// WHY: Guards a subtle coupling. Risk settings and financial state are
+    ///      independent, and changing one must never silently move the other.
+    /// FAILURE MEANS: Picking a risk level alters the money, or the recorded
+    ///      performance, which would corrupt the record the product sells.
+    function test_ChangingMandateDoesNotAlterFinancialState() public {
+        _createFor(alice, TOKEN_A);
+        vm.prank(alice);
+        registry.deposit(TOKEN_A, 1500e18);
+        vm.prank(alice);
+        registry.withdraw(TOKEN_A, 400e18);
+
+        AccountRegistry.Account memory before = registry.getAccount(TOKEN_A);
+        int256 pnlBefore = registry.pnlOf(TOKEN_A);
+        uint256 principalBefore = registry.netPrincipalOf(TOKEN_A);
+
+        vm.prank(alice);
+        registry.setMandate(TOKEN_A, Mandate.Tactical);
+        vm.prank(alice);
+        registry.setMandate(TOKEN_A, Mandate.Preservation);
+
+        AccountRegistry.Account memory afterChange = registry.getAccount(TOKEN_A);
+        assertEq(afterChange.balance, before.balance, "balance moved");
+        assertEq(afterChange.depositedTotal, before.depositedTotal, "depositedTotal moved");
+        assertEq(afterChange.withdrawnTotal, before.withdrawnTotal, "withdrawnTotal moved");
+        assertEq(registry.pnlOf(TOKEN_A), pnlBefore, "PnL moved");
+        assertEq(registry.netPrincipalOf(TOKEN_A), principalBefore, "net principal moved");
+    }
+
+    // ------------------------------------------- effective state before sync
+
+    /// WHAT: Before any sync, every account view already reports the state the
+    ///       account is committed to — paused, with no mandate.
+    /// WHY: Transfer detection is lazy, so raw storage still describes the
+    ///      previous holder between a transfer and the new holder's first
+    ///      interaction. A caller reading raw state would get the seller's
+    ///      pause flag and the seller's risk limits.
+    /// FAILURE MEANS: The risk engine could size a position against a risk
+    ///      appetite the current holder never chose.
+    function test_ViewsReportEffectiveStateBeforeSync() public {
+        _createFor(alice, TOKEN_A);
+        vm.prank(alice);
+        registry.setMandate(TOKEN_A, Mandate.Speculative);
+        vm.prank(alice);
+        registry.setAutomationPaused(TOKEN_A, false);
+
+        nft.transfer(TOKEN_A, carol);
+        // No sync has happened: nobody has called a state-changing function.
+        assertTrue(registry.isTransferPending(TOKEN_A), "precondition: transfer pending");
+
+        assertEq(uint8(registry.mandateOf(TOKEN_A)), uint8(Mandate.Unset), "mandateOf leaked");
+        assertTrue(registry.isAutomationPaused(TOKEN_A), "isAutomationPaused leaked");
+
+        AccountRegistry.Account memory effective = registry.getAccount(TOKEN_A);
+        assertEq(uint8(effective.mandate), uint8(Mandate.Unset), "getAccount leaked mandate");
+        assertTrue(effective.automationPaused, "getAccount leaked pause flag");
+
+        vm.expectRevert(abi.encodeWithSelector(MandateLib.InvalidMandate.selector, uint8(0)));
+        registry.mandateParamsOf(TOKEN_A);
+
+        // And the views were not lying: an actual sync produces the same state.
+        vm.prank(carol);
+        registry.setAutomationPaused(TOKEN_A, true);
+        assertEq(uint8(registry.mandateOf(TOKEN_A)), uint8(Mandate.Unset), "post-sync mandate");
+        assertTrue(registry.getAccount(TOKEN_A).automationPaused, "post-sync pause");
+    }
+
+    /// WHAT: Those views apply their transformation in memory only — stored
+    ///       state is untouched until a real sync happens.
+    /// WHY: `_effectiveAccount` must not write. If reading could mutate, a
+    ///      third party could advance an account's state just by observing it,
+    ///      and the owner-period accounting would drift.
+    /// FAILURE MEANS: A view writes storage, so reads have side effects.
+    /// @dev Proven without depending on storage layout: transfer to carol,
+    ///      read through every effective view, then transfer BACK to alice
+    ///      with no sync in between. `lastKnownOwner` is still alice, so
+    ///      nothing is pending any more and the ORIGINAL stored values
+    ///      reappear. They could only reappear if no view had overwritten
+    ///      them.
+    function test_EffectiveViewsDoNotWriteStorage() public {
+        _createFor(alice, TOKEN_A);
+        vm.prank(alice);
+        registry.setMandate(TOKEN_A, Mandate.Speculative);
+        vm.prank(alice);
+        registry.setAutomationPaused(TOKEN_A, false);
+
+        nft.transfer(TOKEN_A, carol);
+
+        // Read through every effective view while the transfer is pending.
+        registry.mandateOf(TOKEN_A);
+        registry.isAutomationPaused(TOKEN_A);
+        registry.getAccount(TOKEN_A);
+        registry.isTransferPending(TOKEN_A);
+
+        // Back to alice, still with no state-changing call anywhere.
+        nft.transfer(TOKEN_A, alice);
+
+        assertFalse(registry.isTransferPending(TOKEN_A), "should no longer be pending");
+        assertEq(
+            uint8(registry.mandateOf(TOKEN_A)),
+            uint8(Mandate.Speculative),
+            "stored mandate was overwritten by a view"
+        );
+        assertFalse(registry.isAutomationPaused(TOKEN_A), "stored pause flag was written by a view");
+        assertEq(uint256(registry.getAccount(TOKEN_A).ownerPeriod), 1, "ownerPeriod advanced");
+        assertEq(registry.getAccount(TOKEN_A).lastKnownOwner, alice, "lastKnownOwner was written");
     }
 }

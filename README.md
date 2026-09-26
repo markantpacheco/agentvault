@@ -117,7 +117,7 @@ Already cloned without `--recurse-submodules`:
 git submodule update --init --recursive
 ```
 
-Expected: **59 passed, 0 failed.**
+Expected: **84 passed, 0 failed.**
 
 ---
 

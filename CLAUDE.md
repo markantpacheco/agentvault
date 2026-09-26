@@ -92,6 +92,10 @@ U1). Do not do one without the other.
   type's range. Use OpenZeppelin `SafeCast` so the call reverts rather than
   wrapping. A wrapped cast in an accounting path reports a fabricated number
   instead of failing, which is worse than failing.
+- Views exposing account state must report post-sync **effective** state,
+  never raw storage. Transfer detection is lazy, so raw storage is stale
+  between a transfer and the new holder's first interaction. Route every such
+  view through `_effectiveAccount`.
 
 ## Known gotchas
 
@@ -142,10 +146,11 @@ access control, the failure path, and the relevant invariant from
 
 ## Current state
 
-Milestones 1–4 complete: toolchain, repo, `Archetype.sol`, `GenesisAgent.sol`
-(ERC-721 with a permanent archetype assigned at mint), `AccountRegistry.sol`
-(one isolated simulated-capital account per NFT), 59 passing tests, docs
-published, pushed to a private GitHub remote. Nothing deployed to any chain.
+Milestones 1–4 complete, 5 partially: toolchain, repo, `Archetype.sol`,
+`GenesisAgent.sol` (ERC-721 with a permanent archetype assigned at mint),
+`AccountRegistry.sol` (one isolated simulated-capital account per NFT),
+`Mandate.sol` (holder-selected risk setting), 84 passing tests, docs published,
+pushed to a private GitHub remote. Nothing deployed to any chain.
 
 Neither contract has an owner, admin, or role-gated function — there is no
 privileged actor anywhere. `AccountRegistry` depends on `IERC721`, never on
@@ -153,5 +158,11 @@ privileged actor anywhere. `AccountRegistry` depends on `IERC721`, never on
 assets; balances are simulated units. `tokenURI` is deliberately absent until
 metadata hosting has an `INTEGRATIONS.md` entry.
 
-Next: Milestone 5, mandate and strategy registries. ERC-6551 is still `MOCK`
-(`INTEGRATIONS.md` I3), so accounts remain structs until that gate clears.
+Mandate selection is done; cooling-off on raising risk and the strategy
+registry are deferred (`DECISIONS.md` D11). A transfer resets the mandate to
+`Unset` — Starter Mode — and no view exposes raw storage, so a pending
+transfer never leaks the previous holder's settings.
+
+Next: finish Milestone 5 or move to Milestone 6, the permission module.
+ERC-6551 is still `MOCK` (`INTEGRATIONS.md` I3), so accounts remain structs
+until that gate clears.

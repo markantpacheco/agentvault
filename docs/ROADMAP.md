@@ -16,7 +16,7 @@ its week ends.
 | 2 | Docs + GitHub | Registers committed, remote connected, Python + Docker | ✅ Done |
 | 3 | Genesis Agent NFT | ERC-721, permanent archetype at mint | ✅ Done |
 | 4 | Account registry | One isolated account per NFT, isolation tests | ✅ Done |
-| 5 | Mandate + strategy registries | Selection, cooling-off, compatibility | |
+| 5 | Mandate + strategy registries | Selection, cooling-off, compatibility | ◐ Selection done; cooling-off and strategy registry deferred (D11) |
 | 6 | Permission module | Session keys: scope, expiry, revocation, transfer invalidation | |
 | 7 | Risk engine | Deterministic checks, position sizing, drawdown | |
 | 8 | Fill simulator + screener | AMM impact pricing, token safety checks | |
@@ -69,7 +69,7 @@ The local prototype is done when all of these pass as automated tests.
 - [x] Minting assigns exactly one archetype; never changeable afterward
 - [x] Each NFT maps to exactly one account; no two NFTs share one
 - [x] Account A unaffected by any operation on account B
-- [ ] Only the current owner can set the risk mandate
+- [x] Only the current owner can set the risk mandate
 - [ ] A session key cannot withdraw under any input
 - [ ] A session key stops working after expiry
 - [ ] Owner revocation takes effect in the same transaction
@@ -82,7 +82,7 @@ The local prototype is done when all of these pass as automated tests.
 - [ ] New owner starts in conservative Starter Mode
 - [x] A deposit never increases recorded profit
 - [ ] Performance queryable by lifetime, owner period, strategy version, mandate
-- [ ] Speculative mandate has no live-execution code path
+- [x] Speculative mandate has no live-execution code path
 - [ ] Rarity has no effect on any risk limit
 - [ ] Fills priced with real impact, not mid-price
 - [x] `forge test` passes from a clean clone with documented commands
