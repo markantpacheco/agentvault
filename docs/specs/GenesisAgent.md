@@ -54,6 +54,7 @@ operation. A role is added when a milestone actually requires one.
 | `_archetypeOf` | `mapping(uint256 => Archetype)` | Permanent archetype per token. Written once, at mint. |
 | `_hasMinted` | `mapping(address => bool)` | Whether an address has ever minted. Never cleared. |
 | `_nextTokenId` | `uint256` | Next id to assign. Initialised to 1. |
+| `maxSupply` | `uint256 immutable` | Hard supply cap, set at deploy. Cannot be raised by anyone, ever. |
 
 `_nextTokenId` starts at **1**, never 0, so that an uninitialised token id can
 never be mistaken for a real one — the same reasoning that makes
@@ -70,7 +71,11 @@ without limit.
 ### Functions
 
 ```solidity
+constructor(uint256 maxSupply_);
+
 function mint(Archetype archetype) external returns (uint256 tokenId);
+function maxSupply() external view returns (uint256);
+function PROTOTYPE_MAX_SUPPLY() external pure returns (uint256);
 function archetypeOf(uint256 tokenId) external view returns (Archetype);
 function archetypeNameOf(uint256 tokenId) external view returns (string memory);
 function hasMinted(address account) external view returns (bool);
@@ -99,6 +104,8 @@ of any second event for a token as evidence that the archetype is permanent.
 ```solidity
 error AlreadyMinted(address account);
 error NonexistentToken(uint256 tokenId);
+error MaxSupplyReached();
+error InvalidMaxSupply();
 ```
 
 Plus `ArchetypeLib.InvalidArchetype`, raised by `requireValid`. Custom errors,
@@ -111,18 +118,32 @@ not revert strings, per the repo convention.
 | Parameter | Value | Label |
 |---|---|---|
 | Price | 0 | PROTOTYPE |
-| Supply cap | none | PROTOTYPE |
+| Supply cap | 10,000 (constructor-set, immutable) | PROTOTYPE |
 | Per-address limit | 1 (ever) | PROTOTYPE |
 | Who may mint | anyone | PROTOTYPE |
 
-All four are PROTOTYPE values and are neither audited nor proven. `D6` defers
-the real mint, and `ROADMAP.md` states supply will be "sized to actual user
-count" — so no supply cap is committed to here. Sybil minting is possible and
-is accepted: with simulated capital and no payment there is nothing to gain.
+Signed off by the project owner, 2026-09-25. All four are PROTOTYPE values and
+are neither audited nor proven. `ROADMAP.md` states supply will be "sized to
+actual user count" when the real mint is designed, so 10,000 is a placeholder
+for local and testnet work, not a committed production supply. `maxSupply` is
+immutable, so the cap cannot be raised after deployment by anyone — including
+any privileged role added in a later milestone. A zero cap is rejected at
+deploy, since it would produce a permanently unmintable contract.
 
-**Not yet decided by the project owner:** the per-address limit and the
-permissionless mint. Implemented as above so Milestone 3 can proceed; revisit
-before any public deployment.
+### The one-per-address limit is not sybil resistance
+
+It is a **courtesy limit** for a faucet-style testnet mint: it spreads the
+prototype supply across more than one caller instead of letting a single script
+take all of it in one transaction.
+
+It must never be described or relied on as sybil resistance. Addresses are
+free — anyone who wants more tokens simply uses more addresses. No part of this
+system may assume that one address means one person. The limit keys on *has
+ever minted* rather than *currently holds*, which closes the transfer-away-and-
+re-mint loop but does nothing about fresh addresses, because nothing can.
+
+See `DECISIONS.md` D10. Production gating is a Phase 8 decision, alongside the
+archetype randomness mechanism.
 
 ---
 
@@ -205,7 +226,11 @@ relevant invariant.
 | Mint rejects an out-of-range value | G3 |
 | First token id is 1 | G6 |
 | Token ids are unique across mints | G6 |
+| Any address can mint; no privileged minter | Mint policy |
 | A second mint from the same address reverts | Mint policy |
+| Minting past the supply cap reverts | Supply cap |
+| Deploying with a zero cap reverts | Supply cap |
+| Deployed cap equals the documented PROTOTYPE value | Supply cap |
 | Re-mint after transferring away still reverts | `_hasMinted` semantics |
 | `archetypeOf` reverts for a nonexistent token | Silent-zero failure path |
 | Archetype is unchanged after transfer | G4, G1 |
@@ -236,15 +261,14 @@ pre-committed shuffled assignment. Which one is decided in **Phase 8**, not
 now. A matching `TODO(integration)` comment marks the site in
 `GenesisAgent.sol`.
 
-**Also deferred:** `tokenURI` and metadata hosting; supply cap; paid mint;
-allowlist; transfer-triggered permission revocation (Milestone 6); token-bound
-account creation (Milestone 4).
+**Also deferred:** `tokenURI` and metadata hosting; paid mint; allowlist;
+production mint gating; transfer-triggered permission revocation (Milestone 6);
+token-bound account creation (Milestone 4).
 
 ---
 
 ## Open questions
 
-- [ ] Per-address mint limit and permissionless mint — not yet signed off
 - [ ] Whether `ERC721Enumerable` is needed, or whether indexing off
       `ArchetypeAssigned` is sufficient. Enumerable adds per-transfer gas cost
       for a query the frontend may not need on-chain.

@@ -131,7 +131,7 @@ access control, the failure path, and the relevant invariant from
 ## Current state
 
 Milestones 1–3 complete: toolchain, repo, `Archetype.sol`, `GenesisAgent.sol`
-(ERC-721 with a permanent archetype assigned at mint), 21 passing tests, docs
+(ERC-721 with a permanent archetype assigned at mint), 25 passing tests, docs
 published, pushed to a private GitHub remote. Nothing deployed to any chain.
 
 `GenesisAgent` has no owner, no admin, and no role-gated function — there is

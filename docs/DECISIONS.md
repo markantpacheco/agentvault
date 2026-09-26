@@ -205,3 +205,60 @@ this product interacts with it. Both, not either.
 **Process lesson:** The August entry recorded this exemption as possibly
 abandoned after a cancelled meeting. It arrived four weeks later. Regulatory
 assumptions get re-checked monthly from now on.
+
+---
+
+## D10 — Prototype mint: permissionless, one-per-address, free, capped supply (2026-09-25)
+
+**Decided:** The Milestone 3 `GenesisAgent` mint is permissionless (any address
+may call), limited to one token per address ever, free, and capped at a
+constructor-set immutable `maxSupply`, deployed at 10,000. All four values are
+PROTOTYPE.
+
+**Why:**
+- Permissionless and free matches the business sequencing: ship free, run
+  publicly, mint later (D6). An allowlist or a price would add operational work
+  and a privileged role for no prototype benefit.
+- A supply cap is cheap insurance. It is immutable, so it cannot be raised
+  later by anyone, including a privileged role added in a future milestone.
+  10,000 is a placeholder — `ROADMAP.md` commits to sizing real supply to
+  actual user count, and this decision does not pre-empt that.
+- A zero cap is rejected at deploy because it would produce a permanently
+  unmintable contract that otherwise looks like a successful deployment.
+
+**The one-per-address limit is NOT sybil resistance.** It is a courtesy limit
+for a faucet-style testnet mint: it stops one script taking the whole prototype
+supply in a single transaction. Addresses are free, so anyone wanting more
+tokens simply uses more addresses. Nothing in this system may assume that one
+address means one person. The limit keys on *has ever minted* rather than
+*currently holds*, which closes the transfer-away-and-re-mint loop but does
+nothing about fresh addresses, because nothing can.
+
+**No admin role, and no `Ownable`.** `GenesisAgent` has no owner, no admin,
+and no role-gated function, because there is no owner-only function for one to
+gate. An unused privileged role is an attack surface with no corresponding
+benefit — exactly what `THREAT-MODEL.md` T5 (malicious or compromised insider)
+argues against. Nothing that does not exist can be compromised, and no actor
+can alter an assigned archetype even in principle.
+
+Metadata hosting, and any setter it requires, are **Phase 8**, gated on an
+`INTEGRATIONS.md` entry with a verification gate like every other external
+dependency. `tokenURI` is therefore deliberately unimplemented rather than
+stubbed, so that the absence is documented here and in
+`docs/specs/GenesisAgent.md` rather than discovered later by someone wondering
+why it returns nothing. A role is introduced in the milestone that actually
+needs one — most likely Milestone 6, when transfer-triggered permission
+revocation arrives.
+
+**Cost:** The prototype leaderboard and account set can be padded by anyone
+willing to spend gas on multiple addresses. Accepted: with simulated capital
+and no payment there is nothing to win, and the record is segmented per NFT
+anyway.
+
+**Production gating is deferred to Phase 8**, decided together with the
+archetype randomness mechanism, since both concern how a real mint distributes
+scarce things fairly. Candidates: allowlist, proof-of-personhood, paid mint,
+or a curated onboarding — none chosen.
+
+**Reverses if:** the mint stops being free, or the prototype is exposed to an
+audience where a padded record would mislead someone.

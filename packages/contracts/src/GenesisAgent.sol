@@ -29,6 +29,14 @@ contract GenesisAgent is ERC721 {
     /// @param account The rejected caller.
     error AlreadyMinted(address account);
 
+    /// @notice Thrown when the supply cap has been reached.
+    error MaxSupplyReached();
+
+    /// @notice Thrown when the contract is deployed with a zero supply cap.
+    /// @dev A zero cap would make the contract permanently unmintable, which
+    ///      is never an intended deployment.
+    error InvalidMaxSupply();
+
     /// @notice Thrown when a query names a token that has never been minted.
     /// @dev Reverting is deliberate. Returning `Archetype.Unassigned` would be
     ///      indistinguishable from a real unset slot and could propagate into
@@ -56,13 +64,40 @@ contract GenesisAgent is ERC721 {
     ///      makes `Archetype.Unassigned` the zero value.
     uint256 private _nextTokenId = 1;
 
-    constructor() ERC721("AgentVault Genesis Agent", "AGENT") {}
+    /// @notice Maximum number of tokens that can ever be minted. PROTOTYPE.
+    /// @dev Immutable, so the cap cannot be raised after deployment by anyone,
+    ///      including a future privileged role.
+    uint256 public immutable maxSupply;
+
+    /// @notice The PROTOTYPE value to deploy `maxSupply` with.
+    /// @dev PROTOTYPE, not audited and not proven. The roadmap states supply
+    ///      will be "sized to actual user count" when the real mint is
+    ///      designed, so this is a placeholder for local and testnet work, not
+    ///      a committed production supply.
+    uint256 public constant PROTOTYPE_MAX_SUPPLY = 10_000;
+
+    /// @param maxSupply_ Hard cap on total tokens. Must be non-zero.
+    constructor(uint256 maxSupply_) ERC721("AgentVault Genesis Agent", "AGENT") {
+        if (maxSupply_ == 0) {
+            revert InvalidMaxSupply();
+        }
+        maxSupply = maxSupply_;
+    }
 
     /// @notice Mint one Genesis Agent with a permanent archetype.
-    /// @dev PROTOTYPE mint policy, not audited and not proven: free, no supply
-    ///      cap, one per address ever, anyone may call. Sybil minting is
-    ///      possible and accepted — with simulated capital and no payment
-    ///      there is nothing to gain. See docs/specs/GenesisAgent.md.
+    /// @dev PROTOTYPE mint policy, not audited and not proven: free, capped at
+    ///      `maxSupply`, one per address ever, anyone may call. See
+    ///      docs/specs/GenesisAgent.md.
+    ///
+    ///      The one-per-address limit is a COURTESY LIMIT for a faucet-style
+    ///      testnet mint. It spreads the prototype supply across more than one
+    ///      caller instead of letting a single script take all of it in one
+    ///      transaction.
+    ///
+    ///      It is NOT sybil resistance, and must never be described or relied
+    ///      on as such. Addresses are free: anyone who wants more tokens uses
+    ///      more addresses. No part of this system may assume that one address
+    ///      means one person.
     /// @param archetype The archetype to assign permanently. Validated at the
     ///        boundary, so `Unassigned` can never reach storage.
     /// @return tokenId The id of the newly minted token.
@@ -79,6 +114,12 @@ contract GenesisAgent is ERC721 {
         // be verifiable randomness, commit-reveal, or a pre-committed shuffled
         // assignment, decided in Phase 8.
         ArchetypeLib.requireValid(archetype);
+
+        // Ids run 1..maxSupply, so the cap is reached once the next id would
+        // exceed it.
+        if (_nextTokenId > maxSupply) {
+            revert MaxSupplyReached();
+        }
 
         if (_hasMinted[msg.sender]) {
             revert AlreadyMinted(msg.sender);

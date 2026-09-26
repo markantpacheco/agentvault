@@ -21,7 +21,10 @@ contract GenesisAgentTest is Test {
     event ArchetypeAssigned(uint256 indexed tokenId, address indexed to, Archetype archetype);
 
     function setUp() public {
-        genesis = new GenesisAgent();
+        // Deployed with the documented PROTOTYPE cap. Written as a literal
+        // because a contract constant is not reachable through the type name;
+        // test_DeployedWithPrototypeMaxSupply asserts the two agree.
+        genesis = new GenesisAgent(10_000);
     }
 
     /// WHAT: Minting assigns exactly the archetype the caller asked for.
@@ -210,6 +213,63 @@ contract GenesisAgentTest is Test {
         assertEq(genesis.balanceOf(alice), genesis.balanceOf(bob), "balances differ");
         assertEq(maverickId - guardianId, 1, "ids not sequential");
         assertTrue(genesis.hasMinted(alice) == genesis.hasMinted(bob), "mint status differs");
+    }
+
+    /// WHAT: Any address can mint; there is no privileged minter.
+    /// WHY: The PROTOTYPE mint is permissionless. A caller with no relationship
+    ///      to the deployer must succeed, or the mint is not open.
+    /// FAILURE MEANS: Minting is gated, contradicting the stated policy.
+    /// @dev `alice` is not the deployer — this test contract is.
+    function test_MintIsPermissionless() public {
+        assertFalse(alice == address(this), "alice must not be the deployer");
+
+        vm.prank(alice);
+        uint256 tokenId = genesis.mint(Archetype.Guardian);
+
+        assertEq(genesis.ownerOf(tokenId), alice, "non-deployer could not mint");
+        assertEq(genesis.totalMinted(), 1, "mint did not take effect");
+    }
+
+    /// WHAT: The deployed cap equals the documented PROTOTYPE value.
+    /// WHY: The deploy value is recorded in the contract as a constant. If the
+    ///      constant and the value actually deployed drift apart, the label
+    ///      stops describing reality.
+    /// FAILURE MEANS: The documented prototype supply is not what is deployed.
+    function test_DeployedWithPrototypeMaxSupply() public view {
+        assertEq(genesis.maxSupply(), genesis.PROTOTYPE_MAX_SUPPLY(), "cap != documented value");
+        assertEq(genesis.PROTOTYPE_MAX_SUPPLY(), 10_000, "documented value changed");
+    }
+
+    /// WHAT: Minting past the supply cap reverts.
+    /// WHY: `maxSupply` is immutable, so the cap is the one hard quantity
+    ///      guarantee this contract makes. If it can be exceeded, it is not a
+    ///      cap.
+    /// FAILURE MEANS: Supply is unbounded despite an advertised cap.
+    function test_MintRevertsWhenMaxSupplyReached() public {
+        GenesisAgent capped = new GenesisAgent(2);
+        assertEq(capped.maxSupply(), 2, "cap not set from constructor");
+
+        vm.prank(alice);
+        capped.mint(Archetype.Guardian);
+        vm.prank(bob);
+        capped.mint(Archetype.Navigator);
+        assertEq(capped.totalMinted(), 2, "cap not filled");
+
+        vm.prank(carol);
+        vm.expectRevert(GenesisAgent.MaxSupplyReached.selector);
+        capped.mint(Archetype.Tactician);
+
+        assertEq(capped.totalMinted(), 2, "supply exceeded the cap");
+    }
+
+    /// WHAT: Deploying with a zero supply cap reverts.
+    /// WHY: A zero cap makes the contract permanently unmintable. That is
+    ///      never an intended deployment, so it should fail loudly at deploy
+    ///      rather than produce a dead contract.
+    /// FAILURE MEANS: A bricked deployment looks successful.
+    function test_ConstructorRejectsZeroMaxSupply() public {
+        vm.expectRevert(GenesisAgent.InvalidMaxSupply.selector);
+        new GenesisAgent(0);
     }
 
     /// WHAT: For every valid archetype, what goes in comes back out.

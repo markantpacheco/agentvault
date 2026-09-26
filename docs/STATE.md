@@ -34,7 +34,7 @@ See `PRODUCT.md` for detail, `DECISIONS.md` for why.
 |---|---|
 | Toolchain | Installed (git, node, pnpm, foundry 1.8.3, gh, VS Code) |
 | Repo | `~/Documents/agentvault`, pushed to `markantpacheco/agentvault` |
-| Contracts | `Archetype.sol`, `GenesisAgent.sol` + 21 passing Foundry tests |
+| Contracts | `Archetype.sol`, `GenesisAgent.sol` + 25 passing Foundry tests |
 | Dependencies | `forge-std` v1.16.2, OpenZeppelin v5.1.0 — submodules, pinned |
 | GitHub | Connected. Remote is **private**. |
 | Docs | This set, plus `specs/GenesisAgent.md` |
@@ -75,9 +75,9 @@ Not yet done from earlier milestones: Python + Docker install.
 - [ ] Grant application to Robinhood / Arbitrum Open House — not started
 - [ ] Securities lawyer for NFT mint review — not engaged
 - [ ] Which market data source feeds the simulator — undecided
-- [ ] `GenesisAgent` mint policy not signed off: permissionless, one per
-      address ever, no supply cap, free. All PROTOTYPE. Revisit before any
-      public deployment.
+- [x] `GenesisAgent` mint policy signed off 2026-09-25 (`DECISIONS.md` D10):
+      permissionless, one per address ever, free, supply capped at 10,000.
+      All PROTOTYPE. Production gating deferred to Phase 8.
 - [ ] Whether `ERC721Enumerable` is needed, or whether indexing off the
       `ArchetypeAssigned` event is sufficient
 - [ ] Metadata hosting for `tokenURI` — no `INTEGRATIONS.md` entry yet, so
