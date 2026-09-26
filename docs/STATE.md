@@ -4,8 +4,8 @@
 re-explaining the project. Keep it short. Update it at the end of every
 work session.
 
-**Last updated:** 2026-08-19
-**Current milestone:** 1 complete, 2 not started
+**Last updated:** 2026-09-25
+**Current milestone:** 1-3 complete, 4 not started
 **Builder:** solo, novice developer, macOS
 **Constraint:** limited token budget — batch requests, keep state in files
 
@@ -32,19 +32,23 @@ See `PRODUCT.md` for detail, `DECISIONS.md` for why.
 
 | Area | State |
 |---|---|
-| Toolchain | Installed (git, node, pnpm, foundry, VS Code) |
-| Repo | `~/agentvault`, git initialised, 1 commit |
-| Contracts | `Archetype.sol` + 7 passing Foundry tests |
-| GitHub | Not connected yet (Milestone 2) |
-| Docs | This set |
+| Toolchain | Installed (git, node, pnpm, foundry 1.8.3, gh, VS Code) |
+| Repo | `~/Documents/agentvault`, pushed to `markantpacheco/agentvault` |
+| Contracts | `Archetype.sol`, `GenesisAgent.sol` + 21 passing Foundry tests |
+| Dependencies | `forge-std` v1.16.2, OpenZeppelin v5.1.0 — submodules, pinned |
+| GitHub | Connected. Remote is **private**. |
+| Docs | This set, plus `specs/GenesisAgent.md` |
 | Deployed anywhere | **No.** Local only. Nothing on any public chain. |
 
 ---
 
 ## Next action
 
-Milestone 2: GitHub setup, Python + Docker install, register files reviewed
-and committed.
+Milestone 4: account registry — one isolated account per NFT, with isolation
+tests. The ERC-6551 registry is still `MOCK` (`INTEGRATIONS.md` I3), so this
+milestone builds against a mock and records the verification gate.
+
+Not yet done from earlier milestones: Python + Docker install.
 
 ---
 
@@ -71,3 +75,13 @@ and committed.
 - [ ] Grant application to Robinhood / Arbitrum Open House — not started
 - [ ] Securities lawyer for NFT mint review — not engaged
 - [ ] Which market data source feeds the simulator — undecided
+- [ ] `GenesisAgent` mint policy not signed off: permissionless, one per
+      address ever, no supply cap, free. All PROTOTYPE. Revisit before any
+      public deployment.
+- [ ] Whether `ERC721Enumerable` is needed, or whether indexing off the
+      `ArchetypeAssigned` event is sufficient
+- [ ] Metadata hosting for `tokenURI` — no `INTEGRATIONS.md` entry yet, so
+      `tokenURI` is deliberately unimplemented
+- [ ] `docs/sec-comment-letter-DRAFT.md` was publicly readable 18-25 Sep 2026
+      while the repo was public. Repo is private now; the file remains in
+      git history. Decide whether to purge it.

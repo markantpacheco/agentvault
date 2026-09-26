@@ -36,6 +36,12 @@ Dependency versions are pinned by submodule commit. Do not run
 `forge update` without re-running the full suite — `forge-std` v1.16.2 is
 what the fuzz tests are known to compile against.
 
+OpenZeppelin is pinned at **v5.1.0**, and the pin is load-bearing: v5.2.0 and
+later use the `mcopy` opcode, which does not exist under `evm_version =
+"paris"`. Upgrading OpenZeppelin therefore means changing the EVM target, which
+is gated on verifying what Robinhood Chain actually supports (`ASSUMPTIONS.md`
+U1). Do not do one without the other.
+
 ## Non-negotiable rules
 
 1. **Simulation only.** No real user capital, ever, until independent audit
@@ -94,6 +100,15 @@ what the fuzz tests are known to compile against.
   wrappers are needed, move them to a dedicated harness contract.
 - **macOS: forge crashes with SIGABRT on launch.** Usually a missing
   `libusb-1.0.0.dylib`. Fix with `brew install libusb`.
+- **`forge install` stages the submodule at the wrong commit.** It records the
+  dependency's default-branch tip in the index and *then* checks out the
+  pinned tag, so index and worktree disagree. `git submodule status` shows a
+  leading `+`. Committing in that state makes a fresh
+  `--recurse-submodules` clone check out the wrong revision. Fix with
+  `git add <submodule path>` and re-check before committing.
+- **OpenZeppelin v5.2.0+ will not compile under `evm_version = "paris"`.**
+  It uses `mcopy`, a Cancun opcode, reached through `Strings.sol` →
+  `Bytes.sol`. v5.1.0 is the newest paris-compatible release.
 
 ## Testing
 
@@ -115,8 +130,13 @@ access control, the failure path, and the relevant invariant from
 
 ## Current state
 
-Milestones 1–2 complete: toolchain, repo, `Archetype.sol` with passing tests,
-docs published. Nothing deployed to any chain.
+Milestones 1–3 complete: toolchain, repo, `Archetype.sol`, `GenesisAgent.sol`
+(ERC-721 with a permanent archetype assigned at mint), 21 passing tests, docs
+published, pushed to a private GitHub remote. Nothing deployed to any chain.
 
-In progress: Milestone 3, `GenesisAgent.sol` — ERC-721 with a permanent
-archetype assigned at mint. Spec at `docs/specs/GenesisAgent.md`.
+`GenesisAgent` has no owner, no admin, and no role-gated function — there is
+no privileged actor who could alter an assigned archetype. `tokenURI` is
+deliberately absent until metadata hosting has an `INTEGRATIONS.md` entry.
+
+Next: Milestone 4, the account registry — one isolated account per NFT. The
+ERC-6551 registry is still `MOCK` (`INTEGRATIONS.md` I3).

@@ -13,8 +13,8 @@ its week ends.
 | # | Milestone | Deliverable | Status |
 |---|---|---|---|
 | 1 | Environment + repo | Toolchain, monorepo, `Archetype.sol` + 7 tests | ✅ Done |
-| 2 | Docs + GitHub | Registers committed, remote connected, Python + Docker | Next |
-| 3 | Genesis Agent NFT | ERC-721, permanent archetype at mint | |
+| 2 | Docs + GitHub | Registers committed, remote connected, Python + Docker | ✅ Done |
+| 3 | Genesis Agent NFT | ERC-721, permanent archetype at mint | ✅ Done |
 | 4 | Account registry | One isolated account per NFT, isolation tests | |
 | 5 | Mandate + strategy registries | Selection, cooling-off, compatibility | |
 | 6 | Permission module | Session keys: scope, expiry, revocation, transfer invalidation | |
