@@ -15,7 +15,7 @@ its week ends.
 | 1 | Environment + repo | Toolchain, monorepo, `Archetype.sol` + 7 tests | ✅ Done |
 | 2 | Docs + GitHub | Registers committed, remote connected, Python + Docker | ✅ Done |
 | 3 | Genesis Agent NFT | ERC-721, permanent archetype at mint | ✅ Done |
-| 4 | Account registry | One isolated account per NFT, isolation tests | |
+| 4 | Account registry | One isolated account per NFT, isolation tests | ✅ Done |
 | 5 | Mandate + strategy registries | Selection, cooling-off, compatibility | |
 | 6 | Permission module | Session keys: scope, expiry, revocation, transfer invalidation | |
 | 7 | Risk engine | Deterministic checks, position sizing, drawdown | |
@@ -66,9 +66,9 @@ regardless of the above.
 
 The local prototype is done when all of these pass as automated tests.
 
-- [ ] Minting assigns exactly one archetype; never changeable afterward
-- [ ] Each NFT maps to exactly one account; no two NFTs share one
-- [ ] Account A unaffected by any operation on account B
+- [x] Minting assigns exactly one archetype; never changeable afterward
+- [x] Each NFT maps to exactly one account; no two NFTs share one
+- [x] Account A unaffected by any operation on account B
 - [ ] Only the current owner can set the risk mandate
 - [ ] A session key cannot withdraw under any input
 - [ ] A session key stops working after expiry
@@ -78,14 +78,14 @@ The local prototype is done when all of these pass as automated tests.
 - [ ] Daily drawdown breach pauses new trades
 - [ ] Kill switch blocks new trades, never blocks withdrawal
 - [ ] Transfer revokes owner and agent permissions and pauses automation
-- [ ] Transfer does not change the archetype
+- [x] Transfer does not change the archetype
 - [ ] New owner starts in conservative Starter Mode
-- [ ] A deposit never increases recorded profit
+- [x] A deposit never increases recorded profit
 - [ ] Performance queryable by lifetime, owner period, strategy version, mandate
 - [ ] Speculative mandate has no live-execution code path
 - [ ] Rarity has no effect on any risk limit
 - [ ] Fills priced with real impact, not mid-price
-- [ ] `forge test` passes from a clean clone with documented commands
+- [x] `forge test` passes from a clean clone with documented commands
 
 ---
 

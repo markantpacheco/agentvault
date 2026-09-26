@@ -4,8 +4,8 @@
 re-explaining the project. Keep it short. Update it at the end of every
 work session.
 
-**Last updated:** 2026-09-25
-**Current milestone:** 1-3 complete, 4 not started
+**Last updated:** 2026-09-26
+**Current milestone:** 1-4 complete, 5 not started
 **Builder:** solo, novice developer, macOS
 **Constraint:** limited token budget — batch requests, keep state in files
 
@@ -34,19 +34,25 @@ See `PRODUCT.md` for detail, `DECISIONS.md` for why.
 |---|---|
 | Toolchain | Installed (git, node, pnpm, foundry 1.8.3, gh, VS Code) |
 | Repo | `~/Documents/agentvault`, pushed to `markantpacheco/agentvault` |
-| Contracts | `Archetype.sol`, `GenesisAgent.sol` + 25 passing Foundry tests |
+| Contracts | `Archetype.sol`, `GenesisAgent.sol`, `AccountRegistry.sol` + 59 passing tests |
 | Dependencies | `forge-std` v1.16.2, OpenZeppelin v5.1.0 — submodules, pinned |
 | GitHub | Connected. Remote is **private**. |
-| Docs | This set, plus `specs/GenesisAgent.md` |
+| Docs | This set, plus `specs/GenesisAgent.md` and `specs/AccountRegistry.md` |
 | Deployed anywhere | **No.** Local only. Nothing on any public chain. |
 
 ---
 
 ## Next action
 
-Milestone 4: account registry — one isolated account per NFT, with isolation
-tests. The ERC-6551 registry is still `MOCK` (`INTEGRATIONS.md` I3), so this
-milestone builds against a mock and records the verification gate.
+Milestone 5: mandate and strategy registries — selection, cooling-off,
+compatibility. The risk mandate is the financial setting that `Archetype`
+deliberately is not.
+
+Accounts stay structs until ERC-6551 clears its verification gate
+(`INTEGRATIONS.md` I3). Trade settlement is deferred to Milestone 6: nothing
+can change an account balance today except the holder's own deposits and
+withdrawals, because there is no authorised caller and no admin role to
+create one.
 
 Not yet done from earlier milestones: Python + Docker install.
 

@@ -88,6 +88,10 @@ U1). Do not do one without the other.
   reads as zero. Token IDs start at 1 for the same reason.
 - Every test carries a comment: WHAT is tested, WHY it matters, what FAILURE
   MEANS.
+- Never use a raw `int`/`uint` cast on a value that could exceed the target
+  type's range. Use OpenZeppelin `SafeCast` so the call reverts rather than
+  wrapping. A wrapped cast in an accounting path reports a fabricated number
+  instead of failing, which is worse than failing.
 
 ## Known gotchas
 
@@ -109,6 +113,14 @@ U1). Do not do one without the other.
 - **OpenZeppelin v5.2.0+ will not compile under `evm_version = "paris"`.**
   It uses `mcopy`, a Cancun opcode, reached through `Strings.sol` →
   `Bytes.sol`. v5.1.0 is the newest paris-compatible release.
+- **`vm.prank` applies to exactly one call, and a view read consumes it.**
+  A `registry.getAccount(...)` placed between the prank and the call you
+  meant to prank spends the prank, so the real call arrives from the test
+  contract and fails with a confusing owner error naming
+  `0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496` — Foundry's default test
+  contract address. Do every read *before* the prank, or use
+  `vm.startPrank` / `vm.stopPrank`. Easy to reintroduce when refactoring a
+  loop, so check it whenever a pranked test fails on authorisation.
 
 ## Testing
 
@@ -130,13 +142,16 @@ access control, the failure path, and the relevant invariant from
 
 ## Current state
 
-Milestones 1–3 complete: toolchain, repo, `Archetype.sol`, `GenesisAgent.sol`
-(ERC-721 with a permanent archetype assigned at mint), 25 passing tests, docs
+Milestones 1–4 complete: toolchain, repo, `Archetype.sol`, `GenesisAgent.sol`
+(ERC-721 with a permanent archetype assigned at mint), `AccountRegistry.sol`
+(one isolated simulated-capital account per NFT), 59 passing tests, docs
 published, pushed to a private GitHub remote. Nothing deployed to any chain.
 
-`GenesisAgent` has no owner, no admin, and no role-gated function — there is
-no privileged actor who could alter an assigned archetype. `tokenURI` is
-deliberately absent until metadata hosting has an `INTEGRATIONS.md` entry.
+Neither contract has an owner, admin, or role-gated function — there is no
+privileged actor anywhere. `AccountRegistry` depends on `IERC721`, never on
+`GenesisAgent`, so it structurally cannot read an archetype. It holds no real
+assets; balances are simulated units. `tokenURI` is deliberately absent until
+metadata hosting has an `INTEGRATIONS.md` entry.
 
-Next: Milestone 4, the account registry — one isolated account per NFT. The
-ERC-6551 registry is still `MOCK` (`INTEGRATIONS.md` I3).
+Next: Milestone 5, mandate and strategy registries. ERC-6551 is still `MOCK`
+(`INTEGRATIONS.md` I3), so accounts remain structs until that gate clears.
