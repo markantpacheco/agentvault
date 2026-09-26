@@ -105,7 +105,7 @@ tests' job.
 - [x] A deposit never increases recorded profit
 - [ ] Performance queryable by lifetime, owner period, strategy version, mandate
 - [x] Speculative mandate has no live-execution code path
-- [ ] Rarity has no effect on any risk limit
+- [x] Rarity has no effect on any risk limit
 - [ ] Fills priced with real impact, not mid-price
 - [x] `forge test` passes from a clean clone with documented commands
 

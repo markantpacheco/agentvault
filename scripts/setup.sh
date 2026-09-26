@@ -41,4 +41,4 @@ echo "==> Testing..."
 forge test -vv
 
 echo ""
-echo "Setup complete. Expected result: 116 passed, 0 failed."
+echo "Setup complete. Expected result: 126 passed, 0 failed."

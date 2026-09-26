@@ -349,3 +349,57 @@ freshness check imply an oracle guarantee it does not have.
 **Reverses if:** execution and settlement land, giving positions and realised
 PnL somewhere real to live. Drawdown enforcement should be written alongside
 them, not before.
+
+---
+
+## D13 — The first RiskEngine allowlist holds purpose-deployed test assets, not the faucet's tokenized equities (2026-09-26)
+
+**Decided:** The first `RiskEngine` deployed to testnet allowlists two
+purpose-built ERC-20s — `AgentVault Test Asset A` (AVTA) and
+`AgentVault Test Asset B` (AVTB), source at `src/mocks/TestAsset.sol`. It does
+**not** allowlist the five tokenized equities the faucet supplied: TSLA, AMD,
+AMZN, NFLX and PLTR.
+
+**Why:** The allowlist has no setter. It is fixed at construction, and changing
+it means deploying a new engine. That makes it the configuration seam through
+which assets will eventually arrive — and it makes **what goes into it at first
+deployment a positioning statement**, not merely a test fixture.
+
+This project's recorded position excludes securities:
+
+- **D5** chose Core (ETH/WETH/stables) and Volatile (memecoins) tiers,
+  reasoning explicitly that memecoins "sit further from securities
+  classification than tokenized equities". Tokenized equities are neither tier.
+- The `ASSUMPTIONS.md` corrections log records "tokenized stocks are the natural
+  asset class for this chain" as an assumption that turned out **wrong**, and
+  separately that "tokenized securities remain securities".
+- **`PRODUCT.md`** states this is not advice on securities.
+- `STATE.md` still records "securities lawyer — not engaged".
+
+An engine whose entire permanent allowlist was TSLA, AMZN, NFLX, PLTR and AMD
+would contradict all four, in a public repository with verified source and a
+demo aimed at judges. The technical exposure is small — testnet, simulated
+capital, and `RiskEngine` only validates and cannot execute — but the
+positioning is not, and positioning is the thing the allowlist permanently
+encodes.
+
+**Why assets were deployed rather than borrowed:** the faucet supplied **no
+in-tier alternative**. There is no WETH and no settlement stablecoin on this
+testnet (`INTEGRATIONS.md` I9 and I10, both still MOCK), so there was nothing
+neutral to point at. Deploying two deliberately characterless tokens was the
+only option that neither fabricated an address nor made an asset-class claim.
+
+**Cost:** the allowlisted assets are not real, so the testnet demo validates
+against tokens with no market, no price and no liquidity. That costs nothing
+today, because nothing prices or executes anything yet — the fill simulator and
+the AMM adapters are still MOCK. It would matter the moment either exists.
+
+**The five equity addresses stay recorded** in `INTEGRATIONS.md` I13 with their
+on-chain verification intact. The verification work is real and worth keeping if
+an in-tier asset appears later, or if the position changes with counsel's input.
+Recorded, verified, and not used.
+
+**Reverses if:** an in-tier asset becomes available on this testnet, or counsel
+reviews and clears a specific configuration involving tokenized equities. Either
+way it means a new engine deployment, which is the intended mechanism rather
+than a workaround.
