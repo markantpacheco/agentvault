@@ -133,6 +133,18 @@ U1). Do not do one without the other.
   contract address. Do every read *before* the prank, or use
   `vm.startPrank` / `vm.stopPrank`. Easy to reintroduce when refactoring a
   loop, so check it whenever a pranked test fails on authorisation.
+- **`vm.setEnv` mutates the shared process environment; `vm.etch` does not.**
+  Env vars set with `vm.setEnv` persist for the rest of the run and are visible
+  to every other test function, while EVM state such as `vm.etch` resets per
+  test. Split env-dependent tests across several functions and they leak into
+  each other — one function's `EXPECTED_CHAIN_ID` or `ACCOUNT_REGISTRY` is
+  still set when the next one runs, so a guard fires at the wrong point and the
+  failure looks like a bug in the guard rather than in the test. Seen while
+  testing the deploy-script guards: one test reported the wrong address in its
+  revert, another sailed past the chain check it was asserting. Fix: put every
+  env-dependent case in a SINGLE test function, setting the vars immediately
+  before each call, and keep tests that must read no env var free of it
+  entirely — that absence is often part of what they prove.
 
 ## Testing
 

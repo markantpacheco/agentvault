@@ -43,7 +43,8 @@ See `PRODUCT.md` for detail, `DECISIONS.md` for why.
 | Deployed anywhere | **Robinhood Chain testnet (46630) only.** All five contracts verified on Blockscout. **Nothing on mainnet.** |
 | `GenesisAgent` | `0x0EBdDD089f8203DD5cD1Bd1f148F75757285CF96` |
 | `AccountRegistry` | `0x0D0080582D317D2878A31b01D97614a3E918dC65` |
-| `RiskEngine` | `0x158A97c9b56043b5F3b841B3435D249326F43777` (allowlist: AVTA, AVTB) |
+| `RiskEngine` | `0x36df9096162b9f18d13574Fba930C9e2Ce6cc4a4` (allowlist: AVTA, AVTB, Paxos USDG) |
+| `RiskEngine` v1 | `0x158A97c9b56043b5F3b841B3435D249326F43777` — **SUPERSEDED** 2026-09-28, still deployed and verified |
 | `TestAsset` AVTA | `0x87CEd5dc138F825B3F42924A8Bb6E15ae5EC9A7d` |
 | `TestAsset` AVTB | `0x9D97ebc6A395aaf981B26d952A4e22604eAFEc75` |
 | Deployer | `0xeA68020Fa1EeE645E019C870cdE1f99e69135629` (throwaway, keystore only) |

@@ -23,12 +23,83 @@ nowhere to hide.
 | I7 | AMM pool state (reserves) | MOCK | `IPoolState` | `MockPool` |
 | I8 | Token safety screener | MOCK | `ITokenScreener` | `MockScreener` |
 | I9 | WETH | MOCK | ERC-20 | `MockWETH` |
-| I10 | Settlement stablecoin | MOCK | ERC-20 | `MockStable` |
+| I10 | Settlement stablecoin | **VERIFIED** 2026-09-28 — Paxos USDG, see I16 | ERC-20 | `MockStable` still used locally |
 | I11 | Market data feed | MOCK | `IMarketData` | fixture replay |
 | I12 | Block explorer verification | **VERIFIED** 2026-09-26 | Blockscout v10.2.6 at `explorer.testnet.chain.robinhood.com/api`; both contracts verified | n/a |
 | I13 | Testnet tokenized equity tokens (faucet) | **VERIFIED** 2026-09-26 — verified but **NOT allowlisted** | ERC-20, 5 tokens, addresses below | n/a — real testnet contracts |
 | I14 | `TestAsset` ERC-20s (purpose-deployed) | **DEPLOYED & VERIFIED** 2026-09-26 | `src/mocks/TestAsset.sol` | is itself the placeholder |
 | I15 | `RiskEngine` deployment | **DEPLOYED & VERIFIED** 2026-09-26 | `src/RiskEngine.sol` | n/a |
+| I16 | Paxos USDG (Global Dollar) | **VERIFIED** 2026-09-28 | ERC-20, 6 decimals | n/a — real testnet contract |
+
+---
+
+### I16 — Paxos USDG (Global Dollar), Robinhood Chain testnet
+
+| Field | Value |
+|---|---|
+| Address | `0x7E955252E15c84f5768B83c41a71F9eba181802F` |
+| Symbol / name | `USDG` / `Global Dollar` |
+| **Decimals** | **6** — not 18 |
+| Total supply | 56,201,240 USDG at time of check |
+| Holders | 3,878 |
+| Contract type | `ERC1967Proxy` (EIP-1967), verified on Blockscout |
+| Implementation | `0xF0863D7A29a55d0c4263c11bFac754312ff078DF` |
+| Verified | 2026-09-28 |
+
+**How it was verified, in order:**
+
+1. **First-party source.** Paxos publishes testnet deployments at
+   `docs.paxos.com/guides/stablecoin/usdg/testnet`, which lists
+   "Robinhood Testnet" with this exact address. This is the step that matters —
+   see the warning below.
+2. **On chain.** `symbol()`, `name()`, `decimals()` and `totalSupply()` read
+   directly with `cast call` against `rpc.testnet.chain.robinhood.com`, after
+   confirming `cast chain-id` returns 46630. Bytecode is non-empty.
+3. **Explorer cross-check.** Blockscout reports the contract verified, an
+   EIP-1967 proxy, 3,878 holders — consistent with a real, widely used testnet
+   stablecoin rather than a freshly deployed impostor.
+
+#### Warning: the explorer token list is full of USDG impostors
+
+Searching the explorer for `USDG` returns **more than fifty ERC-20s**, many
+named to look canonical: several literally called **"Paxos USDG"**
+(`0x293b3377…`, `0x0d0710E6…`, `0x022F49db…`, `0xC899788E…`, `0xeB5Ef28F…`),
+plus "Global Dollar", "Paxos Global Dollar", "Mock USDG", "Test USDG" and more.
+
+**None of the ones named "Paxos USDG" is the real one.** The genuine contract is
+named simply `Global Dollar`. Contract deployment on this chain is permissionless
+(`ASSUMPTIONS.md` V6), so a convincing name is worth nothing.
+
+This is the concrete case for the rule in `ASSUMPTIONS.md` U2 — never take an
+address from a blog, a search result, or a token list. The only thing that
+settled it was the address published by Paxos themselves, then confirmed on
+chain.
+
+#### USDG is 6 decimals; simulated balances are 18
+
+`AccountRegistry` seeds accounts with `SEED_BALANCE = 10_000e18` and
+`TradeProposal.sizeUnits` is documented as "simulated units, 18 decimals".
+USDG uses **6**.
+
+`RiskEngine` never reads a token's decimals — the allowlist is an address
+check, and the position cap compares `sizeUnits` against the account balance —
+so allowlisting USDG breaks nothing today. But a proposal denominated in USDG's
+native 6 decimals would be 10^12 times smaller than the cap intends, and would
+pass the position check trivially.
+
+That is latent, not live, because nothing prices or executes anything yet
+(I5, I6, I7 all still MOCK). It becomes real the moment a fill simulator exists.
+Whoever builds that must decide explicitly whether `sizeUnits` is a normalised
+18-decimal quantity or a token-native amount. Recorded here so the decision is
+made deliberately rather than discovered.
+
+#### Observation, not a concern
+
+The implementation address behind this proxy,
+`0xF0863D7A29a55d0c4263c11bFac754312ff078DF`, is the same address Paxos lists
+as the USDG token on **X-Layer Testnet**. That is consistent with deterministic
+(CREATE2-style) deployment of identical bytecode across chains, which is normal
+practice. Noted because it looks surprising at first glance.
 
 ---
 
@@ -165,7 +236,12 @@ verification against the explorer API rather than trusting the CLI's message.
 
 | Address | Deploy tx | Allowlist | Verified |
 |---|---|---|---|
-| `0x158A97c9b56043b5F3b841B3435D249326F43777` | `0x2ed949ae…740f3f` | AVTA, AVTB | yes |
+| `0x36df9096162b9f18d13574Fba930C9e2Ce6cc4a4` | `0x825e87bb…fa55d4` | AVTA, AVTB, USDG | yes |
+
+Superseded engine `0x158A97c9b56043b5F3b841B3435D249326F43777` (tx `0x2ed949ae…740f3f`, allowlist AVTA + AVTB only) is
+still deployed and verified but is **no longer current** — the allowlist is
+immutable, so adding USDG required a replacement. Record kept in
+`deployments/robinhood-testnet.json`.
 
 Read back on chain: `registry()` returns the live `AccountRegistry`,
 `approvedAssetCount()` is 2, `MAX_DATA_AGE()` is 300,

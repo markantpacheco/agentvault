@@ -76,7 +76,7 @@
       "explorerUrl": "https://explorer.testnet.chain.robinhood.com/address/0x9D97ebc6A395aaf981B26d952A4e22604eAFEc75",
       "verificationNote": "forge reported 'already verified, skipping' because Blockscout matched AVTA's byte-identical source, but the explorer API still showed is_verified:false. Re-run with --skip-is-verified-check to verify properly."
     },
-    "RiskEngine": {
+    "RiskEngine_v1_superseded": {
       "address": "0x158A97c9b56043b5F3b841B3435D249326F43777",
       "txHash": "0x2ed949aed399cd75bda90083a1a2e86ed3d67caead4ee1bb6df5895da9740f3f",
       "block": 124753535,
@@ -103,7 +103,47 @@
         "verifiedOnChain": "isApprovedAsset(AVTA)=true, isApprovedAsset(AVTB)=true, isApprovedAsset(TSLA)=false"
       },
       "maxDataAge": 300,
-      "explorerUrl": "https://explorer.testnet.chain.robinhood.com/address/0x158A97c9b56043b5F3b841B3435D249326F43777"
+      "explorerUrl": "https://explorer.testnet.chain.robinhood.com/address/0x158A97c9b56043b5F3b841B3435D249326F43777",
+      "status": "SUPERSEDED",
+      "supersededAt": "2026-09-28",
+      "supersededBy": "0x36df9096162b9f18d13574Fba930C9e2Ce6cc4a4",
+      "supersededReason": "Allowlist extended to include Paxos USDG (0x7E955252E15c84f5768B83c41a71F9eba181802F), a real in-tier stablecoin verified against Paxos's published testnet deployments. The RiskEngine allowlist is fixed at construction with no setter, so extending it requires deploying a replacement engine. That is the intended mechanism, not a workaround - see DECISIONS.md D13.",
+      "stillDeployed": true,
+      "recordKeptDeliberately": "Kept rather than deleted. A superseded deployment that is documented is part of the honest record; silently removing it would leave a verified contract on chain with no explanation of why it exists or why it is not the current one."
+    },
+    "RiskEngine": {
+      "address": "0x36df9096162b9f18d13574Fba930C9e2Ce6cc4a4",
+      "version": "v2 - current",
+      "txHash": "0x825e87bbd750f0cb0e65e215f5c26408f968094918bb8f2f1e46ab7849fa55d4",
+      "block": 125896776,
+      "gasUsed": 1226252,
+      "gasPaidEth": "0.00001226252",
+      "deployedAt": "2026-09-28",
+      "supersedes": "0x158A97c9b56043b5F3b841B3435D249326F43777",
+      "constructorArgs": [
+        "0x0D0080582D317D2878A31b01D97614a3E918dC65",
+        [
+          "0x87CEd5dc138F825B3F42924A8Bb6E15ae5EC9A7d",
+          "0x9D97ebc6A395aaf981B26d952A4e22604eAFEc75",
+          "0x7E955252E15c84f5768B83c41a71F9eba181802F"
+        ]
+      ],
+      "constructorSignature": "constructor(address,address[])",
+      "constructorArgsProvenance": "Derived from the script source and cross-checked against the deployment transaction's input data, which ends with exactly this encoding - not taken from memory.",
+      "verified": true,
+      "allowlist": {
+        "assets": [
+          "AVTA 0x87CEd5dc138F825B3F42924A8Bb6E15ae5EC9A7d (18 decimals, INTEGRATIONS I14)",
+          "AVTB 0x9D97ebc6A395aaf981B26d952A4e22604eAFEc75 (18 decimals, INTEGRATIONS I14)",
+          "USDG 0x7E955252E15c84f5768B83c41a71F9eba181802F (6 decimals, Paxos, INTEGRATIONS I16)"
+        ],
+        "immutable": true,
+        "deliberatelyExcluded": "The five faucet-supplied tokenized equities (TSLA, AMD, AMZN, NFLX, PLTR) - INTEGRATIONS I13, DECISIONS D13. Also every impostor USDG - SECURITY-ANALYSIS S1.",
+        "verifiedOnChain": "Read back with cast after deployment: isApprovedAsset true for AVTA, AVTB and USDG; false for GenesisAgent (control), for TSLA, and for the impostor 'Paxos USDG' at 0x293b337712D4312776a3a2D292F44410E7873bAd. approvedAssetCount()==3, registry()==0x0D0080582D317D2878A31b01D97614a3E918dC65, MAX_DATA_AGE()==300.",
+        "mixedDecimals": "USDG is 6-decimal while AVTA/AVTB are 18-decimal. RiskEngine never reads decimals(); sizeUnits is a normalised 18-decimal simulated unit. See DECISIONS.md D14."
+      },
+      "maxDataAge": 300,
+      "explorerUrl": "https://explorer.testnet.chain.robinhood.com/address/0x36df9096162b9f18d13574Fba930C9e2Ce6cc4a4"
     }
   },
   "notDeployed": {

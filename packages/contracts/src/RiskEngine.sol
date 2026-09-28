@@ -23,7 +23,24 @@ enum Side {
 struct TradeProposal {
     address asset;
     Side side;
-    uint256 sizeUnits; // position size, simulated units, 18 decimals
+    /// @dev DENOMINATION: `sizeUnits` is a NORMALISED simulated unit at 18
+    ///      decimals. It is independent of the traded asset's native decimals,
+    ///      and `RiskEngine` NEVER reads a token's `decimals()`.
+    ///
+    ///      This matters now that the allowlist mixes decimal conventions: AVTA
+    ///      and AVTB are 18-decimal, Paxos USDG is **6**-decimal
+    ///      (`INTEGRATIONS.md` I16). The engine treats all three identically,
+    ///      because the position cap compares `sizeUnits` against the account's
+    ///      simulated balance — which is also 18-decimal — and never against
+    ///      anything token-denominated.
+    ///
+    ///      Any future execution or fill adapter MUST convert between
+    ///      normalised units and token-native amounts at its own boundary.
+    ///      Getting that wrong in the USDG direction — passing a native
+    ///      6-decimal amount where a normalised 18-decimal one is expected —
+    ///      understates the position by a factor of 10^12 and sails through
+    ///      every cap.
+    uint256 sizeUnits;
     uint16 slippageBps; // max slippage the proposer will accept
     uint256 dataTimestamp; // when the market data behind this was observed
 }
@@ -265,6 +282,18 @@ contract RiskEngine {
         //    REVERT — which this function must never do. mulDiv computes the
         //    same value in full width, and the result can never exceed
         //    `balance` because maxPositionBps <= 10000.
+        // DENOMINATION, restated at the site that depends on it: both sides of
+        // this comparison are NORMALISED 18-decimal simulated units. The
+        // account balance is simulated capital, not a token balance, and
+        // `sizeUnits` is normalised by definition. No `decimals()` call appears
+        // anywhere in this contract, deliberately — the cap is asset-agnostic.
+        //
+        // TODO(decimals): when execution or fill simulation is built, decide
+        // explicitly whether proposals crossing that boundary carry normalised
+        // or token-native amounts, and convert at the boundary. USDG is
+        // 6-decimal while the rest of the allowlist is 18-decimal; conflating
+        // them understates a USDG position by 10^12. See INTEGRATIONS.md I16
+        // and DECISIONS.md D14.
         uint256 maxPositionUnits = Math.mulDiv(
             registry.getAccount(tokenId).balance, params.maxPositionBps, BPS_DENOMINATOR
         );

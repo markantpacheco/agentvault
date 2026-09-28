@@ -403,3 +403,56 @@ Recorded, verified, and not used.
 reviews and clears a specific configuration involving tokenized equities. Either
 way it means a new engine deployment, which is the intended mechanism rather
 than a workaround.
+
+---
+
+## D14 — `sizeUnits` is a normalised 18-decimal unit, not a token amount (2026-09-28)
+
+**Decided:** `TradeProposal.sizeUnits` is a **normalised simulated unit at 18
+decimals**, independent of the traded asset's native decimals. `RiskEngine`
+never calls `decimals()` on anything, and never will. Conversion between
+normalised units and token-native amounts belongs at the execution or fill
+boundary, not in the validator.
+
+**Why this needed deciding now:** until 2026-09-28 the allowlist held only
+AVTA and AVTB, both 18-decimal, so the question was invisible — every plausible
+interpretation gave the same answer. Adding Paxos USDG, which is **6-decimal**
+(`INTEGRATIONS.md` I16), makes the ambiguity real for the first time. Mixing
+conventions inside one allowlist is precisely when an unstated assumption turns
+into a bug.
+
+**Why normalised rather than token-native:**
+
+- The position cap compares `sizeUnits` against the account's **simulated
+  balance**, which is simulated capital at 18 decimals — not a token balance.
+  Comparing a token-native amount against it would be comparing two different
+  units and calling the result a limit.
+- A validator that reads `decimals()` gains a dependency on every allowlisted
+  token behaving honestly. `decimals()` is not part of the ERC-20 required
+  interface, can revert, and on a proxy can change. A pure validator should not
+  have that surface.
+- Keeping the engine asset-agnostic means adding an asset never changes how
+  sizing is interpreted.
+
+**The concrete hazard, stated plainly:** passing a native 6-decimal USDG amount
+where a normalised 18-decimal one is expected **understates the position by a
+factor of 10^12** and passes every cap trivially. In the other direction it
+overstates by the same factor and rejects everything. The first is far more
+dangerous, because it fails open.
+
+**This is latent, not live.** Nothing prices or executes anything yet — I5
+(oracle), I6 (venue adapter) and I7 (pool state) are all still MOCK, and
+`RiskEngine` cannot execute. The hazard becomes real the moment a fill simulator
+exists. A `TODO(decimals)` marks the position-cap site, and the rule is stated
+at the `TradeProposal` struct as well, so it is visible from both the type and
+the check that depends on it.
+
+**Cost:** anyone building execution must write and test a conversion layer, and
+get it right per asset. That is real work that a token-native convention would
+have avoided — but it would have moved the same problem into the risk engine,
+where it would be harder to see and would compromise the validator's
+independence from token behaviour.
+
+**Reverses if:** execution lands and the boundary turns out to be cleaner with
+token-native amounts throughout. That is a decision to make with the fill
+simulator in front of you, not before it exists.

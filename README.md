@@ -131,7 +131,7 @@ mainnet.
 |---|---|---|
 | `GenesisAgent` | `0x0EBdDD089f8203DD5cD1Bd1f148F75757285CF96` | [View verified source](https://explorer.testnet.chain.robinhood.com/address/0x0EBdDD089f8203DD5cD1Bd1f148F75757285CF96) |
 | `AccountRegistry` | `0x0D0080582D317D2878A31b01D97614a3E918dC65` | [View verified source](https://explorer.testnet.chain.robinhood.com/address/0x0D0080582D317D2878A31b01D97614a3E918dC65) |
-| `RiskEngine` | `0x158A97c9b56043b5F3b841B3435D249326F43777` | [View verified source](https://explorer.testnet.chain.robinhood.com/address/0x158A97c9b56043b5F3b841B3435D249326F43777) |
+| `RiskEngine` | `0x36df9096162b9f18d13574Fba930C9e2Ce6cc4a4` | [View verified source](https://explorer.testnet.chain.robinhood.com/address/0x36df9096162b9f18d13574Fba930C9e2Ce6cc4a4) |
 | `TestAsset` (AVTA) | `0x87CEd5dc138F825B3F42924A8Bb6E15ae5EC9A7d` | [View verified source](https://explorer.testnet.chain.robinhood.com/address/0x87CEd5dc138F825B3F42924A8Bb6E15ae5EC9A7d) |
 | `TestAsset` (AVTB) | `0x9D97ebc6A395aaf981B26d952A4e22604eAFEc75` | [View verified source](https://explorer.testnet.chain.robinhood.com/address/0x9D97ebc6A395aaf981B26d952A4e22604eAFEc75) |
 
