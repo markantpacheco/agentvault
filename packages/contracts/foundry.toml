@@ -21,6 +21,26 @@ optimizer = false
 
 verbosity = 1
 
+# Stateful fuzzing (invariant) configuration. Set EXPLICITLY rather than left to
+# defaults so the search space is visible in the repo and a reader can reproduce
+# exactly what was run.
+[invariant]
+runs = 128
+depth = 128
+
+# fail_on_revert = true is the strict setting: ANY reverting handler call fails
+# the run. It is chosen because the handler is written so that no call can
+# revert - every action checks its preconditions and returns early when unmet -
+# so a revert here means something genuinely unexpected rather than a rejection
+# the test anticipated.
+#
+# Note that this setting alone is weak evidence: a handler whose functions all
+# returned early would satisfy it while exploring nothing. That is why the
+# handler counts SUCCESSFUL MUTATIONS, not calls, and afterInvariant() asserts
+# those counts are non-trivial. The two together are what make the suite
+# meaningful; either alone is not.
+fail_on_revert = true
+
 [fmt]
 line_length = 100
 tab_width = 4

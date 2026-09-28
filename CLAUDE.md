@@ -175,7 +175,8 @@ Milestones 1–4 complete, 5 partially: toolchain, repo, `Archetype.sol`,
 `GenesisAgent.sol` (ERC-721 with a permanent archetype assigned at mint),
 `AccountRegistry.sol` (one isolated simulated-capital account per NFT),
 `Mandate.sol` (holder-selected risk setting), `RiskEngine.sol` (the
-deterministic validator), 124 passing tests, docs published, pushed to a
+deterministic validator), 126 passing tests including a stateful-fuzz
+(invariant) suite, docs published, pushed to a
 private GitHub remote.
 
 **Deployed to Robinhood Chain testnet (46630)**, both contracts verified on

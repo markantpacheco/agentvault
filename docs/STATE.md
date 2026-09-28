@@ -36,11 +36,12 @@ See `PRODUCT.md` for detail, `DECISIONS.md` for why.
 |---|---|
 | Toolchain | Installed (git, node, pnpm, foundry 1.8.3, gh, VS Code) |
 | Repo | `~/Documents/agentvault`, pushed to `markantpacheco/agentvault` |
-| Contracts | `Archetype.sol`, `GenesisAgent.sol`, `AccountRegistry.sol`, `Mandate.sol`, `RiskEngine.sol` + 124 passing tests |
+| Contracts | `Archetype.sol`, `GenesisAgent.sol`, `AccountRegistry.sol`, `Mandate.sol`, `RiskEngine.sol` + 126 passing tests |
 | Dependencies | `forge-std` v1.16.2, OpenZeppelin v5.1.0 — submodules, pinned |
 | GitHub | Connected. Remote is **private**. |
 | Docs | This set, plus specs for `GenesisAgent`, `AccountRegistry`, `Mandate`, `Deployment`, `RiskEngine` |
 | Static analysis | Slither 0.11.6, solc 0.8.24, 2026-09-28: **5 findings in our code, 0 bugs** — 3 accepted, 2 false positive. `SECURITY-ANALYSIS.md`. |
+| Invariant tests | 4 stateful-fuzz invariants (withdrawal liveness, deposit-is-never-profit, paused-never-approves, archetype-cannot-influence-risk). runs=128 depth=128, fail_on_revert=true, 16,384 calls, 0 reverts. |
 | Deployed anywhere | **Robinhood Chain testnet (46630) only.** All five contracts verified on Blockscout. **Nothing on mainnet.** |
 | `GenesisAgent` | `0x0EBdDD089f8203DD5cD1Bd1f148F75757285CF96` |
 | `AccountRegistry` | `0x0D0080582D317D2878A31b01D97614a3E918dC65` |
