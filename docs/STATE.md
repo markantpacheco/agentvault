@@ -40,6 +40,7 @@ See `PRODUCT.md` for detail, `DECISIONS.md` for why.
 | Dependencies | `forge-std` v1.16.2, OpenZeppelin v5.1.0 — submodules, pinned |
 | GitHub | Connected. Remote is **private**. |
 | Docs | This set, plus specs for `GenesisAgent`, `AccountRegistry`, `Mandate`, `Deployment`, `RiskEngine` |
+| Static analysis | Slither 0.11.6, solc 0.8.24, 2026-09-28: **5 findings in our code, 0 bugs** — 3 accepted, 2 false positive. `SECURITY-ANALYSIS.md`. |
 | Deployed anywhere | **Robinhood Chain testnet (46630) only.** All five contracts verified on Blockscout. **Nothing on mainnet.** |
 | `GenesisAgent` | `0x0EBdDD089f8203DD5cD1Bd1f148F75757285CF96` |
 | `AccountRegistry` | `0x0D0080582D317D2878A31b01D97614a3E918dC65` |
