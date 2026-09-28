@@ -133,18 +133,22 @@ U1). Do not do one without the other.
   contract address. Do every read *before* the prank, or use
   `vm.startPrank` / `vm.stopPrank`. Easy to reintroduce when refactoring a
   loop, so check it whenever a pranked test fails on authorisation.
-- **`vm.setEnv` mutates the shared process environment; `vm.etch` does not.**
-  Env vars set with `vm.setEnv` persist for the rest of the run and are visible
-  to every other test function, while EVM state such as `vm.etch` resets per
-  test. Split env-dependent tests across several functions and they leak into
-  each other — one function's `EXPECTED_CHAIN_ID` or `ACCOUNT_REGISTRY` is
-  still set when the next one runs, so a guard fires at the wrong point and the
-  failure looks like a bug in the guard rather than in the test. Seen while
-  testing the deploy-script guards: one test reported the wrong address in its
-  revert, another sailed past the chain check it was asserting. Fix: put every
-  env-dependent case in a SINGLE test function, setting the vars immediately
-  before each call, and keep tests that must read no env var free of it
-  entirely — that absence is often part of what they prove.
+- **`vm.setEnv` mutates the shared process environment, and Foundry runs test
+  CONTRACTS IN PARALLEL.** Env vars set with `vm.setEnv` persist for the whole
+  run and are visible to every other test, while EVM state such as `vm.etch`
+  resets per test. Two test files that both set `EXPECTED_CHAIN_ID` will clobber
+  each other mid-test, non-deterministically — the wrong guard fires and the
+  failure looks like a bug in the guard rather than in the test.
+  **Consolidating into one test function is NOT sufficient**, because the race
+  is across contracts, not across functions: a sibling file can reset the
+  variable between two calls inside your single function. This was measured, not
+  theorised — the deploy-script guards failed roughly three runs in five while
+  split across two files, and a test asserting `NoCodeAtAddress` received
+  `UnexpectedChain` instead. Fix: put every env-dependent assertion in a SINGLE
+  function in a SINGLE contract, setting the vars immediately before each call,
+  and keep tests that read no env var free of it entirely — that absence is part
+  of what they prove, and makes them immune to this. If a suite passes
+  intermittently, run it 5–8 times before believing it.
 
 ## Testing
 
@@ -171,7 +175,7 @@ Milestones 1–4 complete, 5 partially: toolchain, repo, `Archetype.sol`,
 `GenesisAgent.sol` (ERC-721 with a permanent archetype assigned at mint),
 `AccountRegistry.sol` (one isolated simulated-capital account per NFT),
 `Mandate.sol` (holder-selected risk setting), `RiskEngine.sol` (the
-deterministic validator), 126 passing tests, docs published, pushed to a
+deterministic validator), 124 passing tests, docs published, pushed to a
 private GitHub remote.
 
 **Deployed to Robinhood Chain testnet (46630)**, both contracts verified on

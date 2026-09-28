@@ -36,7 +36,7 @@ See `PRODUCT.md` for detail, `DECISIONS.md` for why.
 |---|---|
 | Toolchain | Installed (git, node, pnpm, foundry 1.8.3, gh, VS Code) |
 | Repo | `~/Documents/agentvault`, pushed to `markantpacheco/agentvault` |
-| Contracts | `Archetype.sol`, `GenesisAgent.sol`, `AccountRegistry.sol`, `Mandate.sol`, `RiskEngine.sol` + 126 passing tests |
+| Contracts | `Archetype.sol`, `GenesisAgent.sol`, `AccountRegistry.sol`, `Mandate.sol`, `RiskEngine.sol` + 124 passing tests |
 | Dependencies | `forge-std` v1.16.2, OpenZeppelin v5.1.0 — submodules, pinned |
 | GitHub | Connected. Remote is **private**. |
 | Docs | This set, plus specs for `GenesisAgent`, `AccountRegistry`, `Mandate`, `Deployment`, `RiskEngine` |
