@@ -149,6 +149,25 @@ U1). Do not do one without the other.
   and keep tests that read no env var free of it entirely — that absence is part
   of what they prove, and makes them immune to this. If a suite passes
   intermittently, run it 5–8 times before believing it.
+- **A coverage assertion inside `afterInvariant()` is trivially failable, so
+  the shrinker drives straight at it.** When any invariant fails, Foundry
+  shrinks toward the SHORTEST sequence that still fails — and "the handler did
+  enough work" is failed by a sequence of length 1. So the shrinker abandons
+  the real counterexample and hands you a nonsense one instead.
+  **Symptom, which is baffling cold:** a reported failure of
+  `no withdrawal succeeded: 0 <= 0` on a shrunk sequence of ONE call, against a
+  run that made 4096 calls with zero reverts — every coverage counter reading
+  zero because a one-call sequence genuinely achieved nothing. The invariant
+  named in the failure is not the one that broke. Fix: `afterInvariant()`
+  REPORTS coverage (logs, no assertions), and an ORDINARY test asserts it,
+  because ordinary tests are not shrunk. See `test/invariant/Invariants.t.sol`.
+- **Foundry reports all `invariant_*` functions in a contract as ONE test.**
+  `forge test --list` counts them individually, `forge test` does not, so the
+  two totals differ and neither is wrong. This repo: 129 functions collected,
+  126 reported, the gap being four invariants collapsing into one entry. Worth
+  knowing before concluding that tests have silently stopped being collected —
+  reconcile per suite, since a genuinely dropped test looks identical to a
+  clean pass.
 
 ## Testing
 

@@ -147,8 +147,33 @@ contract InvariantsTest is Test {
                 "I2: pnl != balance - netPrincipal"
             );
 
-            // Equation 2: true only while nothing can move a balance.
-            assertEq(a.balance, netPrincipal, "I2: balance diverged from net principal");
+            // Equation 2: A DELIBERATE TRIPWIRE. DO NOT DELETE THIS WHEN IT
+            // FAILS.
+            //
+            // This asserts balance == netPrincipal, which is true ONLY while no
+            // code path can move a balance. Today none can: the only mutations
+            // are the holder's own deposits and withdrawals, and trade
+            // settlement does not exist (TODO(milestone-6) in
+            // AccountRegistry.sol).
+            //
+            // **It is SUPPOSED to fail the day execution lands.** That failure
+            // is not a bug and not a regression — it is the signal that
+            // settlement is now moving balances, which is exactly the moment
+            // this equation stops describing the system.
+            //
+            // When it fires: REPLACE it, do not delete it. The successor should
+            // assert that balance diverges from net principal only by realised
+            // PnL, which is the same claim adapted to a system that can
+            // actually trade. Deleting it silently removes the only automated
+            // check that principal has not leaked into performance — the
+            // product's central promise.
+            //
+            // Equation 1 above is definitional and survives unchanged.
+            assertEq(
+                a.balance,
+                netPrincipal,
+                "I2 TRIPWIRE: balance diverged from net principal - if settlement now exists this is expected, REPLACE this assertion, do not delete it"
+            );
             assertEq(registry.pnlOf(tokenId), int256(0), "I2: PnL is not zero");
         }
     }
