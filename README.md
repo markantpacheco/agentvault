@@ -119,6 +119,10 @@ git submodule update --init --recursive
 
 Expected: **126 passed, 0 failed.**
 
+(`forge test --list` counts 129 functions — Foundry executes the four
+`invariant_*` functions as a single reported entry. 126 is the number
+`forge test` prints.)
+
 ---
 
 ## Deployed contracts

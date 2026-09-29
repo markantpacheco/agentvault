@@ -23,7 +23,7 @@ its week ends.
 | 9 | Performance registry | Recording, deposit/profit separation, segmented views | |
 | 10 | Agent pipeline | Typed schemas, mock classifier, schema rejection tests | |
 | 11 | Frontend | Dashboard, mandate selection, kill switch, leaderboard | |
-| 12 | Testnet + hardening | Deploy, fuzz, invariants, public launch | ◐ Deploy done early (2026-09-26); fuzz, invariants, launch outstanding |
+| 12 | Testnet + hardening | Deploy, fuzz, invariants, public launch | ◐ Deploy (2026-09-26), fuzz and invariants (2026-09-28) done early; hardening and public launch outstanding |
 
 ---
 
@@ -65,6 +65,18 @@ regardless of the above.
 ## Prototype acceptance criteria
 
 The local prototype is done when all of these pass as automated tests.
+
+Four stateful-fuzz invariants were added 2026-09-28 (`test/invariant/`). They
+**strengthen** four criteria already ticked below — withdrawal is never blocked,
+a deposit is never profit, paused never approves, and rarity has no effect on
+any risk limit — by proving each across randomised *sequences* of operations
+rather than in a single state. **They unlock no new tick.** Every criterion they
+touch was already established by unit and pure-fuzz tests; what changed is the
+strength of the evidence, not its existence.
+
+The two unenforced mandate parameters remain unenforced: `maxOpenPositions` and
+`maxDailyDrawdownBps` (`DECISIONS.md` D12). No invariant covers them, because
+there is nothing to cover.
 
 Every tick above is earned by an automated test. **No criterion is ticked on
 the strength of the testnet deployment**, because a single happy-path run

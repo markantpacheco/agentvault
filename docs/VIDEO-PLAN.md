@@ -166,6 +166,38 @@ time is tight — the verified source matters more.
 If you end up under time, three seconds of `forge test` showing **126 passed,
 0 failed** is a strong credibility signal for a solo submission.
 
+### The command to have on screen
+
+```bash
+cd packages/contracts && forge test
+```
+
+Its final line is the one that matters, and it comes from the terminal rather
+than from any document:
+
+```
+Ran 9 test suites in 77.47s (...): 126 tests passed, 0 failed, 0 skipped (126 total tests)
+```
+
+**It takes about 77 seconds**, almost all of it the stateful-fuzz invariant
+suite at runs=128 depth=128. Start it before you begin narrating and cut the
+wait in iMovie, or record it separately and splice the final line. Do not
+shorten it by skipping the invariants — they are the strongest evidence in the
+repo.
+
+If you want only the number, with no scrolling:
+
+```bash
+cd packages/contracts && forge test 2>&1 | tail -1
+```
+
+That waits 77 seconds in silence, which looks worse on camera than letting the
+output scroll. Prefer the plain `forge test`.
+
+**Say "126", not "129".** `forge test --list` counts 129 functions because
+Foundry executes the four `invariant_*` functions as one reported entry. 126 is
+what the command prints, so 126 is what a judge reproduces.
+
 Don't force it in. A rushed 95-second video is worse than a clean 85-second
 one.
 
