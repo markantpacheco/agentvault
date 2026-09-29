@@ -186,7 +186,8 @@ access control, the failure path, and the relevant invariant from
 `docs/SECURITY-ANALYSIS.md` — Slither findings, triaged, plus human-review findings
 `docs/PRODUCT.md` — what this is and is not
 `docs/LEGAL-QUESTIONS.md` — questions for counsel, not answers
-`docs/specs/` — per-contract specifications, written before implementation
+`docs/specs/` — specifications written before implementation (per contract,
+             plus `Deployment.md` and `BrandMark.md`)
 
 ## Current state
 

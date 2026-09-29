@@ -61,11 +61,25 @@ See `PRODUCT.md` for detail, `DECISIONS.md` for why.
 
 ## Next action
 
-**Record the demo video.** Everything it needs is live: five verified
-contracts, and the six-beat arc already broadcast once so the transaction
-exists and can be linked.
+**Demo video is done** — recorded, edited and uploaded to the Buildathon
+submission 2026-09-28.
 
-Two ways to shoot the arc:
+Outstanding, in rough order:
+
+1. **Brand mark assets** — spec at `docs/specs/BrandMark.md`. Source SVGs,
+   rendered PNGs, an export script and a usage guide. Documentation and assets
+   only; no contract, no dependency, nothing deployed.
+2. **Read-only frontend** — reads the deployed contracts and shows account
+   state, mandate limits and validation verdicts. Read-only: no transaction
+   this project's UI can send should be able to change an account.
+3. **Pitch video** (optional) — separate from the demo video, which is already
+   submitted.
+4. **Final submission.**
+
+`src/` is frozen. None of the above touches the contracts.
+
+The two ways to run the arc, kept because they are repository documentation
+rather than production notes:
 
 - `forge script script/Demo.s.sol:Demo -vv` — self-contained, deploys its own
   instances, free, instant, repeatable. Best for iterating on the script.
@@ -73,8 +87,8 @@ Two ways to shoot the arc:
   contracts using token 1. At most two transactions; every other beat is a view
   and costs nothing. Re-running unpauses first, so the arc works repeatedly.
 
-After the video, Milestone 6: the permission module — session keys with scope,
-expiry, revocation, and transfer invalidation. That is also where the deferred
+After the submission, Milestone 6: the permission module — session keys with
+scope, expiry, revocation, and transfer invalidation. That is also where the deferred
 `TODO(milestone-6)` trade-settlement authorisation lands, and it is the first
 thing that will need permission to move a balance.
 
