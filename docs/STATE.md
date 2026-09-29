@@ -4,11 +4,12 @@
 re-explaining the project. Keep it short. Update it at the end of every
 work session.
 
-**Last updated:** 2026-09-28
+**Last updated:** 2026-09-29
 **Current milestone:** 1-4 complete, 5 and 7 partial. Deployed, verified and
-demonstrated live on testnet (pulled forward from 12). Static analysis and
-stateful-fuzz invariants done. **Next deliverable is the demo video, not code —
-src/ is frozen.**
+demonstrated live on testnet (pulled forward from 12). Static analysis,
+stateful-fuzz invariants and the demo video all done; submitted to the
+Buildathon 2026-09-29. **What remains is brand assets, a read-only frontend and
+final submission — no contract work. src/ is frozen.**
 **Builder:** solo, novice developer, macOS
 **Constraint:** limited token budget — batch requests, keep state in files
 
@@ -62,7 +63,7 @@ See `PRODUCT.md` for detail, `DECISIONS.md` for why.
 ## Next action
 
 **Demo video is done** — recorded, edited and uploaded to the Buildathon
-submission 2026-09-28.
+submission.
 
 Outstanding, in rough order:
 

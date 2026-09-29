@@ -19,8 +19,9 @@ flattened to prose, because the form rejected that formatting. **The substance
 is identical.** This version keeps the original formatting because it renders on
 GitHub.
 
-The pitch video script is deliberately excluded — production material, not
-project documentation.
+This snapshot covers the submission overview, the tech stack and the progress
+narrative. Production material submitted alongside them is excluded: it is not
+project documentation and does not belong in this repository.
 
 ## Known divergence from the repository
 
