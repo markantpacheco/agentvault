@@ -61,9 +61,9 @@ See `PRODUCT.md` for detail, `DECISIONS.md` for why.
 
 ## Next action
 
-**Record the demo video.** Plan in `docs/VIDEO-PLAN.md`. Everything it needs is
-live: five verified contracts, and the six-beat arc already broadcast once so
-the transaction exists and can be linked.
+**Record the demo video.** Everything it needs is live: five verified
+contracts, and the six-beat arc already broadcast once so the transaction
+exists and can be linked.
 
 Two ways to shoot the arc:
 
